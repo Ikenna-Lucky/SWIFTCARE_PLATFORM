@@ -2,6 +2,7 @@ import express from "express";
 import {
   bookAppointment,
   getProfile,
+  listAppointment,
   loginUser,
   registerUser,
   updateProfile,
@@ -20,5 +21,6 @@ userRouter.post(
   updateProfile
 );
 userRouter.post("/book-appointment", authUser, bookAppointment);
+userRouter.get("/appointment", authUser, listAppointment);
 
 export default userRouter;
