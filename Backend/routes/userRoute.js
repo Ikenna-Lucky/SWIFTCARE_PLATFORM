@@ -21,6 +21,6 @@ userRouter.post(
   updateProfile
 );
 userRouter.post("/book-appointment", authUser, bookAppointment);
-userRouter.get("/appointment", authUser, listAppointment);
+userRouter.get("/appointments", authUser, listAppointment);
 
 export default userRouter;
