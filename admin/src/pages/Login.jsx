@@ -44,7 +44,7 @@ const Login = () => {
     <form onSubmit={onSubmitHandler} className="min-h-[80vh] flex items-center">
       <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border-0 rounded-xl text-[#5e5e5e] text-sm shadow-lg">
         <p className="text-2xl font-semibold m-auto">
-          <span className="text-[#5f6fff]">{state} </span>
+          <span className="text-[#008080]">{state} </span>
           Login
         </p>
         <div className="w-full">
@@ -67,14 +67,14 @@ const Login = () => {
             required
           />
         </div>
-        <button className="bg-[#5f6fff] text-white w-full py-2  rounded-md text-base">
+        <button className="bg-[#008080] text-white w-full py-2  rounded-md text-base">
           Login
         </button>
         {state === "Admin" ? (
           <p>
             Doctor Login?{" "}
             <span
-              className="text-[#5f6fff] underline cursor-pointer"
+              className="text-[#008080] underline cursor-pointer"
               onClick={() => setState("Doctor")}
             >
               Click here
@@ -84,7 +84,7 @@ const Login = () => {
           <p>
             Admin Login?{" "}
             <span
-              className="text-[#5f6fff] underline cursor-pointer"
+              className="text-[#008080] underline cursor-pointer"
               onClick={() => setState("Admin")}
             >
               Click here

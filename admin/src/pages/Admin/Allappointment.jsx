@@ -53,6 +53,8 @@ const Allappointment = () => {
             <p>${item.amount}</p>
             {item.cancelled ? (
               <p className="text-red-400 text-xs font-medium">Cancelled</p>
+            ) : item.isCompleted ? (
+              <p className="text-green-500 text-xs font-medium">Completed</p>
             ) : (
               <img
                 onClick={() => cancelAppointmentByAdmin(item._id)}

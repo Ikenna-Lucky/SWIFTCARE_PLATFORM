@@ -10,8 +10,10 @@ const Navbar = () => {
   const { aToken, setAToken } = useContext(AdminContext);
   const { dToken, setDToken } = useContext(DoctorContext);
   const logout = () => {
+    aToken && setAToken("");
+    aToken && localStorage.removeItem("aToken");
     dToken && setDToken("");
-    dToken && localStorage.removeItem("dToken");
+    dToken && localStorage.removeItem("aToken");
     navigate("/");
   };
 
@@ -29,7 +31,7 @@ const Navbar = () => {
       </div>
       <button
         onClick={logout}
-        className="bg-[#5f6fff] text-white text-sm px-10 py-2 rounded-full"
+        className="bg-[#008080] text-white text-sm px-10 py-2 rounded-full"
       >
         Logout
       </button>

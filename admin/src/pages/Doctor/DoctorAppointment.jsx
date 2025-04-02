@@ -44,7 +44,7 @@ const DoctorAppointment = () => {
               <p>{item.userData.name}</p>
             </div>
             <div>
-              <p className="text-xs inline border border-[#5f5fff] px-2 rounded-full">
+              <p className="text-xs inline border border-[#008080] px-2 rounded-full">
                 {item.payment ? "Online" : "Cash"}
               </p>
             </div>

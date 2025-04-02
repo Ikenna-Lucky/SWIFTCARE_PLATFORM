@@ -7,3 +7,7 @@
 ::-webkit-scrollbar {
   @apply hidden;
 }
+
+#inputColor {
+  accent-color: #008080;
+}

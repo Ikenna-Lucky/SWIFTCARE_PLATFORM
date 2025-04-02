@@ -141,8 +141,8 @@ const doctorProfile = async (req, res) => {
 };
 
 //API TO UPDATE DOCTOR PROFILE DATA FROM DOCTOR PANEL
-const updateDocProfile = async (req, res) => {
-  try {
+const updateDocProfile = async (req, res) => { 
+  try { 
     const { docId, fees, address, available } = req.body;
     await doctorModel.findByIdAndUpdate(docId, { fees, address, available });
     res.json({ success: true, message: "Profile Updated" });

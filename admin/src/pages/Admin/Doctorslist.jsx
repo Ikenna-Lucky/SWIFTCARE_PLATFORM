@@ -23,7 +23,7 @@ const Doctorslist = () => {
             <img
               src={item.image}
               alt="doc Image"
-              className="bg-indigo-50 group-hover:bg-[#5f6fff] transition-all duration-500"
+              className="bg-indigo-50 group-hover:bg-[#008080] transition-all duration-500"
             />
             <div className="p-4">
               <p className="text-neutral-800 text-lg font-medium">
@@ -35,8 +35,9 @@ const Doctorslist = () => {
                   onChange={() => changeAvailability(item._id)}
                   type="checkbox"
                   checked={item.available}
+                  id="inputColor"
                 />
-                <p>Available</p>
+                <label htmlFor="inputColor">Available</label>
               </div>
             </div>
           </div>

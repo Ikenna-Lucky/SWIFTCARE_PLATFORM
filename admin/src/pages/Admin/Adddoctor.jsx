@@ -240,7 +240,7 @@ const Adddoctor = () => {
 
         <button
           type="submit"
-          className="bg-[#5f5fff] px-10 py-3 mt-4 text-white rounded-full"
+          className="bg-[#008080] px-10 py-3 mt-4 text-white rounded-full"
         >
           Add Doctor
         </button>
