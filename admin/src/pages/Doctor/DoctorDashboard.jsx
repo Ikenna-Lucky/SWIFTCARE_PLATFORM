@@ -3,7 +3,7 @@ import { DoctorContext } from "../../context/DoctorContext";
 import { assets } from "../../assets/assets_admin/assets";
 import { AppContext } from "../../context/AppContext";
 
-const DoctorDashboard = () => {
+const doctorDashboard = () => {
   const {
     dToken,
     dashData,
@@ -104,4 +104,4 @@ const DoctorDashboard = () => {
   );
 };
 
-export default DoctorDashboard;
+export default doctorDashboard;
