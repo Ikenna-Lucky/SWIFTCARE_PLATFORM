@@ -13,9 +13,11 @@ const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+
 // middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 //api endpoints
 app.use("/api/admin", adminRouter);
