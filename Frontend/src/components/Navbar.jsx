@@ -1,7 +1,4 @@
 import React, { useContext, useState } from "react";
-import logo from "../assets/assets_frontend/logo.svg";
-import profilePics from "../assets/assets_frontend/profile_pic.png";
-import dropdownIcon from "../assets/assets_frontend/dropdown_icon.svg";
 import { NavLink, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets_frontend/assets";
 import { AppContext } from "../context/AppContext";
@@ -23,8 +20,8 @@ const Navbar = () => {
           navigate("/");
           scrollTo(0, 0);
         }}
-        className="w-44 cursor-pointer"
-        src={logo}
+        className="w-44 max-[330px]:w-36 cursor-pointer"
+        src={assets.logo}
         alt=""
       />
       <ul className="hidden md:flex items-start font-medium gap-5">
@@ -53,7 +50,7 @@ const Navbar = () => {
               alt=""
               className="w-10 h-10 object-cover rounded-full border border-primary"
             />
-            <img src={dropdownIcon} alt="" className="w-2.5" />
+            <img src={assets.dropdown_icon} alt="" className="w-2.5" />
             <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-600 z-20 hidden group-hover:block">
               <div className="min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4 shadow-md shadow-black/30">
                 <p
