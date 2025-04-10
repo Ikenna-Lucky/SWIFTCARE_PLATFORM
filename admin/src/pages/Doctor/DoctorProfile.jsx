@@ -163,4 +163,4 @@ const DoctorProfile = () => {
 };
 
 
-export default DoctorProfile
+export default DoctorProfile;
