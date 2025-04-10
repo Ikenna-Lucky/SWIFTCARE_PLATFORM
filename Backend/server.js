@@ -16,7 +16,7 @@ connectCloudinary();
 // const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
 const allowedOrigins = [
   "https://swiftcare-platform.vercel.app",
-  "http://localhost:5174",
+  "https://swiftcare-admindoc.vercel.app",
 ];
 
 // middlewares
