@@ -11,8 +11,8 @@ import Adddoctor from "./pages/Admin/Adddoctor";
 import Doctorslist from "./pages/Admin/Doctorslist";
 import { DoctorContext } from "./context/DoctorContext";
 import DoctorDashboard from "./pages/Doctor/DoctorDashboard";
-import DoctorProfile from "./pages/Doctor/doctorProfile";
-import DoctorAppointment from "./pages/Doctor/doctorappointment";
+import DoctorProfile from "./pages/Doctor/DoctorProfile";
+import DoctorAppointment from "./pages/Doctor/DoctorAppointment";
 const App = () => {
   const { aToken } = useContext(AdminContext);
   const { dToken } = useContext(DoctorContext);
