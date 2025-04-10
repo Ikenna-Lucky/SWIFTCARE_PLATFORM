@@ -13,7 +13,11 @@ const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+// const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = [
+  "https://swiftcare-platform.vercel.app",
+  "http://localhost:5174",
+];
 
 // middlewares
 app.use(express.json());

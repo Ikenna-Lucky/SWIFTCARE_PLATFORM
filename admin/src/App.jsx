@@ -10,7 +10,7 @@ import Allappointment from "./pages/Admin/Allappointment";
 import Adddoctor from "./pages/Admin/Adddoctor";
 import Doctorslist from "./pages/Admin/Doctorslist";
 import { DoctorContext } from "./context/DoctorContext";
-import DoctorDashboard from "./pages/Doctor/doctorDashboard";
+import DoctorDashboard from "./pages/Doctor/DoctorDashboard";
 import DoctorProfile from "./pages/Doctor/doctorProfile";
 import DoctorAppointment from "./pages/Doctor/doctorappointment";
 const App = () => {
