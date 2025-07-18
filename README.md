@@ -1,6 +1,8 @@
 # SWIFTCARE PLATFORM
 
-[Live Demo](https://swiftcare-platform.vercel.app/)
+END USERS - [Live Demo](https://swiftcare-platform.vercel.app/)
+
+DOCTORS - [Live Demo](https://swiftcare-admindoc.vercel.app/)
 
 ![Home Page Screenshot](./Frontend/src/assets/assets_frontend/Home-page.png)
 
