@@ -1,5 +1,9 @@
 # SWIFTCARE PLATFORM
 
+[Live Demo](https://swiftcare-platform.vercel.app/)
+
+![Home Page Screenshot](./Frontend/src/assets/assets_frontend/Home-page.png)
+
 A full-stack healthcare appointment and management platform, also known as **swiftcare**, designed to connect patients with credentialed doctors, streamline appointment bookings, and provide robust admin and doctor dashboards.
 
 ---
