@@ -68,7 +68,8 @@ const loginUser = async (req, res) => {
 //API TO GET USER PROFILE DATA
 const getProfile = async (req, res) => {
   try {
-    const { userId } = req.body;
+    // userId is injected by authUser middleware via req.userId
+    const userId = req.userId;
     const userData = await userModel.findById(userId).select("-password");
     res.json({ success: true, userData });
   } catch (error) {
@@ -80,7 +81,9 @@ const getProfile = async (req, res) => {
 //API TO UPDATE USER PROFILE
 const updateProfile = async (req, res) => {
   try {
-    const { userId, name, phone, dob, gender, address } = req.body;
+    // userId is injected by authUser middleware via req.userId
+    const userId = req.userId;
+    const { name, phone, dob, gender, address } = req.body;
     const imageFile = req.file;
 
     if (!name || !phone || !dob || !gender || !address) {
@@ -112,7 +115,9 @@ const updateProfile = async (req, res) => {
 // API to book appointment
 const bookAppointment = async (req, res) => {
   try {
-    const { userId, docId, slotTime, slotDate } = req.body;
+    // userId is injected by authUser middleware via req.userId
+    const userId = req.userId;
+    const { docId, slotTime, slotDate } = req.body;
     //getting the doctor data
     const docData = await doctorModel.findById(docId).select("-password");
 
@@ -164,7 +169,8 @@ const bookAppointment = async (req, res) => {
 //API Function to get the list of doctors that user has booked
 const listAppointment = async (req, res) => {
   try {
-    const { userId } = req.body;
+    // userId is injected by authUser middleware via req.userId
+    const userId = req.userId;
     const appointments = await appointmentModel.find({ userId });
     res.json({ success: true, appointments });
   } catch (error) {
@@ -176,7 +182,9 @@ const listAppointment = async (req, res) => {
 //API to cancel appointment made
 const cancelAppointment = async (req, res) => {
   try {
-    const { userId, appointmentId } = req.body;
+    // userId is injected by authUser middleware via req.userId
+    const userId = req.userId;
+    const { appointmentId } = req.body;
     const appointmentData = await appointmentModel.findById(appointmentId);
     //verify appointment user
     if (appointmentData.userId !== userId) {
@@ -191,7 +199,7 @@ const cancelAppointment = async (req, res) => {
     const doctorData = await doctorModel.findById(docId);
     let slots_booked = doctorData.slots_booked;
     slots_booked[slotDate] = slots_booked[slotDate].filter(
-      (e) => e !== slotTime
+      (e) => e !== slotTime,
     );
     await doctorModel.findByIdAndUpdate(docId, { slots_booked });
     res.json({ success: true, message: "Appointment Cancelled" });

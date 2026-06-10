@@ -1,131 +1,366 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets_frontend/assets";
 import { AppContext } from "../context/AppContext";
 
+/** Central nav link config — add/remove links in one place */
+const NAV_LINKS = [
+  { path: "/", label: "Home" },
+  { path: "/doctors", label: "Find Doctors" },
+  { path: "/about", label: "About" },
+  { path: "/contact", label: "Contact" },
+];
+
 const Navbar = () => {
   const navigate = useNavigate();
-
   const [showMenu, setShowMenu] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { token, setToken, userData } = useContext(AppContext);
-  const logOut = () => {
+
+  // Apply drop-shadow once the user scrolls past 10px
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = showMenu ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showMenu]);
+
+  const handleLogOut = () => {
     setToken("");
     localStorage.removeItem("token");
+    navigate("/");
+  };
+
+  const handleLogoClick = () => {
+    navigate("/");
+    window.scrollTo(0, 0);
   };
 
   return (
-    <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400">
-      <img
-        onClick={() => {
-          navigate("/");
-          scrollTo(0, 0);
-        }}
-        className="w-44 max-[330px]:w-36 cursor-pointer"
-        src={assets.logo}
-        alt=""
+    <>
+      <nav
+        className={`sticky top-0 z-50 bg-white transition-shadow duration-300 ${
+          scrolled ? "shadow-md" : "border-b border-gray-100"
+        }`}
+      >
+        <div className="mx-4 sm:mx-[10%] flex items-center justify-between h-16">
+          {/* ── Logo ── */}
+          <img
+            onClick={handleLogoClick}
+            className="w-36 cursor-pointer"
+            src={assets.logo}
+            alt="SwiftCare"
+          />
+
+          {/* ── Desktop nav links ── */}
+          <ul className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map(({ path, label }) => (
+              <NavLink key={path} to={path} end={path === "/"}>
+                {({ isActive }) => (
+                  <li
+                    className={`px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-colors duration-200 ${
+                      isActive
+                        ? "text-primary bg-primary-light"
+                        : "text-gray-600 hover:text-primary hover:bg-gray-50"
+                    }`}
+                  >
+                    {label}
+                  </li>
+                )}
+              </NavLink>
+            ))}
+          </ul>
+
+          {/* ── Right side ── */}
+          <div className="flex items-center gap-3">
+            {token && userData ? (
+              /* User avatar + hover dropdown */
+              <div className="relative group">
+                <button className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-50 transition-colors">
+                  <img
+                    src={userData.image}
+                    alt={userData.name}
+                    className="w-9 h-9 rounded-full object-cover ring-2 ring-primary/20"
+                  />
+                  <svg
+                    className="w-3.5 h-3.5 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* Dropdown panel — visible on group hover */}
+                <div className="absolute right-0 top-full pt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right">
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-gray-50">
+                      <p className="text-sm font-semibold text-gray-800 truncate">
+                        {userData.name}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate mt-0.5">
+                        {userData.email}
+                      </p>
+                    </div>
+                    <div className="py-1.5">
+                      <button
+                        onClick={() => navigate("/my-profile")}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <svg
+                          className="w-4 h-4 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                        My Profile
+                      </button>
+                      <button
+                        onClick={() => navigate("/my-appointment")}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-primary transition-colors"
+                      >
+                        <svg
+                          className="w-4 h-4 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        My Appointments
+                      </button>
+                    </div>
+                    <div className="border-t border-gray-50 py-1.5">
+                      <button
+                        onClick={handleLogOut}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <svg
+                          className="w-4 h-4 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
+                        </svg>
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Guest buttons (desktop only) */
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={() => navigate("/login")}
+                  className="text-sm font-medium text-gray-600 hover:text-primary px-4 py-2 transition-colors"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="btn-primary text-sm"
+                >
+                  Get Started
+                </button>
+              </div>
+            )}
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setShowMenu(true)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Open navigation menu"
+            >
+              <svg
+                className="w-5 h-5 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Mobile backdrop overlay ── */}
+      <div
+        onClick={() => setShowMenu(false)}
+        className={`fixed inset-0 bg-black/40 z-50 md:hidden transition-opacity duration-300 ${
+          showMenu
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
       />
-      <ul className="hidden md:flex items-start font-medium gap-5">
-        <NavLink to="/">
-          <li className="py-1">Home</li>
-          <hr className="border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden" />
-        </NavLink>
-        <NavLink to="/doctors">
-          <li className="py-1">All Doctors</li>
-          <hr className="border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden" />
-        </NavLink>
-        <NavLink to="/about">
-          <li className="py-1">About</li>
-          <hr className="border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden" />
-        </NavLink>
-        <NavLink to="/contact">
-          <li className="py-1">Contact</li>
-          <hr className="border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden" />
-        </NavLink>
-      </ul>
-      <div className="flex items-center gap-4">
-        {token ? (
-          <div className="flex items-center gap-2 cursor-pointer group relative">
+
+      {/* ── Mobile slide-over drawer ── */}
+      <div
+        className={`fixed top-0 right-0 h-full w-72 bg-white z-50 md:hidden flex flex-col shadow-2xl
+                    transform transition-transform duration-300 ease-in-out ${
+                      showMenu ? "translate-x-0" : "translate-x-full"
+                    }`}
+      >
+        <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100">
+          <img className="w-32" src={assets.logo} alt="SwiftCare" />
+          <button
+            onClick={() => setShowMenu(false)}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Close menu"
+          >
+            <svg
+              className="w-5 h-5 text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Logged-in user identity strip */}
+        {token && userData && (
+          <div className="flex items-center gap-3 px-5 py-4 bg-primary-light border-b border-primary/10">
             <img
               src={userData.image}
-              alt=""
-              className="w-10 h-10 object-cover rounded-full border border-primary"
+              alt={userData.name}
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/30"
             />
-            <img src={assets.dropdown_icon} alt="" className="w-2.5" />
-            <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-600 z-20 hidden group-hover:block">
-              <div className="min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4 shadow-md shadow-black/30">
-                <p
-                  onClick={() => {
-                    navigate("my-profile");
-                  }}
-                  className="hover:text-black hover:bg-primary/50 cursor-pointer px-4 py-2 rounded"
-                >
-                  My Profile
-                </p>
-                <p
-                  onClick={() => {
-                    navigate("my-appointment");
-                  }}
-                  className="hover:text-black hover:bg-primary/50 cursor-pointer px-4 py-2 rounded"
-                >
-                  My Appointment
-                </p>
-                <p
-                  onClick={logOut}
-                  className="hover:text-black hover:bg-primary/50 cursor-pointer px-4 py-2 rounded"
-                >
-                  LogOut
-                </p>
-              </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {userData.name}
+              </p>
+              <p className="text-xs text-gray-500">Patient</p>
             </div>
           </div>
-        ) : (
-          <button
-            onClick={() => {
-              navigate("/login");
-            }}
-            className="bg-primary text-white px-8 py-3 rounded-full font-light hidden md:block"
-          >
-            Create account
-          </button>
         )}
-        <img
-          onClick={() => setShowMenu(true)}
-          className="w-6 md:hidden"
-          src={assets.menu_icon}
-          alt=""
-        />
-        {/*  Mobile Menu  */}
-        <div
-          className={`md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all ${
-            showMenu ? "fixed w-full" : "h-0 w-0"
-          }`}
-        >
-          <div className="flex items-center justify-between px-5 py-6">
-            <img className="w-36" src={assets.logo} alt="" />
-            <img
-              className="w-7"
+
+        {/* Nav links */}
+        <ul className="flex flex-col px-4 py-4 gap-1 flex-1 overflow-y-auto">
+          {NAV_LINKS.map(({ path, label }) => (
+            <NavLink
+              key={path}
+              to={path}
+              end={path === "/"}
               onClick={() => setShowMenu(false)}
-              src={assets.cross_icon}
-              alt=""
-            />
-          </div>
-          <ul className="flex flex-col items-center gap-2 mt-5 px-5 text-lg font-medium">
-            <NavLink onClick={() => setShowMenu(false)} to="/">
-              <p className="px-4 py-2 rounded inline-block">Home</p>
+            >
+              {({ isActive }) => (
+                <li
+                  className={`px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-colors ${
+                    isActive
+                      ? "text-primary bg-primary-light"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </li>
+              )}
             </NavLink>
-            <NavLink onClick={() => setShowMenu(false)} to="/doctors">
-              <p className="px-4 py-2 rounded inline-block">All Doctors</p>
-            </NavLink>
-            <NavLink onClick={() => setShowMenu(false)} to="/about">
-              <p className="px-4 py-2 rounded inline-block">About</p>
-            </NavLink>
-            <NavLink onClick={() => setShowMenu(false)} to="/contact">
-              <p className="px-4 py-2 rounded inline-block">Contact</p>
-            </NavLink>
-          </ul>
+          ))}
+          {token && (
+            <>
+              <li
+                onClick={() => {
+                  navigate("/my-profile");
+                  setShowMenu(false);
+                }}
+                className="px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors"
+              >
+                My Profile
+              </li>
+              <li
+                onClick={() => {
+                  navigate("/my-appointment");
+                  setShowMenu(false);
+                }}
+                className="px-4 py-3 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors"
+              >
+                My Appointments
+              </li>
+            </>
+          )}
+        </ul>
+
+        {/* Bottom action buttons */}
+        <div className="px-4 pb-6 pt-2 border-t border-gray-100">
+          {token ? (
+            <button
+              onClick={() => {
+                handleLogOut();
+                setShowMenu(false);
+              }}
+              className="w-full py-3 rounded-full text-sm font-medium text-red-500 hover:bg-red-50 transition-colors border border-red-100"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  navigate("/login");
+                  setShowMenu(false);
+                }}
+                className="btn-outline w-full text-center text-sm"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/login");
+                  setShowMenu(false);
+                }}
+                className="btn-primary w-full text-center text-sm"
+              >
+                Get Started
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

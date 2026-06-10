@@ -12,8 +12,9 @@ const authDoctor = async (req, res, next) => {
       });
     }
 
-    const token_decode = jwt.verify(dtoken, process.env.JWT_SECRET); // To decode the generated token
-    req.body.docId = token_decode.id;
+    const token_decode = jwt.verify(dtoken, process.env.JWT_SECRET);
+    // Attach to req directly — not req.body — so GET requests work reliably too
+    req.docId = token_decode.id;
     next();
   } catch (error) {
     console.log(error);
