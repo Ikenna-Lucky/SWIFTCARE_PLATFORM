@@ -10,9 +10,7 @@ const authUser = async (req, res, next) => {
         message: "Not authorised. Please log in again.",
       });
     }
-
     const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    // Attach to req directly — not req.body — so GET requests work reliably too
     req.userId = token_decode.id;
     next();
   } catch (error) {
