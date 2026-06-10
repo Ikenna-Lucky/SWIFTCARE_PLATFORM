@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
+import { assets } from "../assets/assets_frontend/assets";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -28,11 +29,11 @@ const validate = (field, value) => {
 const FEATURES = [
   {
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4",
-    text: "Book appointments instantly",
+    text: "100+ verified specialists, all credentialled",
   },
   {
-    icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z",
-    text: "Access top-rated doctors",
+    icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+    text: "Book an appointment in under 2 minutes",
   },
   {
     icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
@@ -64,16 +65,17 @@ const Login = () => {
     setErrors((prev) => ({ ...prev, [field]: validate(field, value) }));
   };
 
-  const isFormValid = () => {
-    if (isSignUp && validate("name", name)) return false;
-    if (validate("email", email)) return false;
-    if (validate("password", password)) return false;
-    return true;
+  const switchMode = () => {
+    setIsSignUp((v) => !v);
+    setErrors({ name: "", email: "", password: "" });
+    setTouched({ name: false, email: false, password: false });
+    setName("");
+    setEmail("");
+    setPassword("");
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    // Touch all fields to show validation
     const fields = isSignUp
       ? ["name", "email", "password"]
       : ["email", "password"];
@@ -107,111 +109,146 @@ const Login = () => {
     }
   };
 
-  const EyeIcon = () => (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      {showPassword ? (
-        <>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
-          />
-        </>
-      ) : (
-        <>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        </>
-      )}
-    </svg>
-  );
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 page-enter">
-      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-xl overflow-hidden flex">
-        {/* Left panel */}
-        <div className="hidden md:flex flex-col justify-between w-80 bg-gradient-to-br from-primary to-teal-500 px-8 py-10 shrink-0">
-          <div>
-            <h2 className="text-white text-2xl font-bold leading-snug mb-3">
-              {isSignUp ? "Join SwiftCare" : "Welcome back"}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 page-enter">
+      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex">
+        {/* ── Left panel ── */}
+        <div className="hidden md:flex flex-col justify-between w-[420px] shrink-0 bg-gradient-to-br from-primary via-teal-600 to-teal-500 px-8 py-10 relative overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/5 -translate-y-1/3 translate-x-1/3" />
+          <div className="absolute bottom-20 left-0 w-48 h-48 rounded-full bg-white/5 translate-y-1/3 -translate-x-1/3" />
+
+          <div className="relative z-10">
+            {/* Logo */}
+            <div className="flex items-center gap-2 mb-8">
+              <img
+                src={assets.logo}
+                alt="SwiftCare"
+                className="h-8 w-8 brightness-0 invert"
+              />
+              <span className="text-white font-bold text-lg">Swiftcare</span>
+            </div>
+
+            {/* Headline */}
+            <h2 className="text-white text-3xl font-bold leading-snug mb-2">
+              Healthcare that works
             </h2>
-            <p className="text-teal-100 text-sm leading-relaxed">
-              {isSignUp
-                ? "Create an account to book appointments with top doctors."
-                : "Sign in to manage your appointments and health records."}
-            </p>
-          </div>
-          <ul className="space-y-4">
-            {FEATURES.map((f, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+            <h2 className="text-teal-200 text-3xl font-bold leading-snug mb-8">
+              around your life.
+            </h2>
+
+            {/* Feature bullets */}
+            <ul className="space-y-4 mb-8">
+              {FEATURES.map((f, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d={f.icon}
+                      />
+                    </svg>
+                  </div>
+                  <span className="text-teal-50 text-sm">{f.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Testimonial card */}
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6 relative z-10">
+              <div className="flex gap-0.5 mb-2">
+                {[...Array(5)].map((_, i) => (
                   <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
+                    key={i}
+                    className="w-4 h-4 text-yellow-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d={f.icon}
-                    />
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
+                ))}
+              </div>
+              <p className="text-white text-xs leading-relaxed mb-3">
+                "SwiftCare made it so easy to find a specialist and book — saved
+                me hours of back-and-forth phone calls."
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-teal-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  S
                 </div>
-                <span className="text-teal-100 text-sm leading-snug">
-                  {f.text}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="text-teal-300 text-xs">
-            SwiftCare &copy; {new Date().getFullYear()}
-          </p>
+                <div>
+                  <p className="text-white text-xs font-semibold">Sarah M.</p>
+                  <p className="text-teal-200 text-xs">Verified Patient</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Trust row + doctor image */}
+          <div className="relative z-10 flex items-end justify-between">
+            <div className="flex items-center gap-2">
+              <img
+                src={assets.group_profiles}
+                alt="Patients"
+                className="h-8 w-auto"
+              />
+              <p className="text-teal-100 text-xs">
+                Trusted by <span className="font-bold text-white">50,000+</span>{" "}
+                patients
+              </p>
+            </div>
+          </div>
+
+          {/* Doctor image */}
+          <img
+            src={assets.doc_header}
+            alt="Doctor"
+            className="absolute bottom-0 right-0 h-56 w-auto object-contain object-bottom pointer-events-none"
+          />
         </div>
 
-        {/* Right panel — form */}
-        <div className="flex-1 px-8 py-10 md:px-10">
-          {/* Mobile title */}
-          <h2 className="md:hidden text-2xl font-bold text-gray-900 mb-1">
-            {isSignUp ? "Create account" : "Sign in"}
-          </h2>
-
-          <div className="hidden md:block mb-8">
-            <h3 className="text-xl font-bold text-gray-900">
-              {isSignUp ? "Create your account" : "Sign in to your account"}
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setErrors({ name: "", email: "", password: "" });
-                  setTouched({ name: false, email: false, password: false });
-                }}
-                className="text-primary font-semibold hover:underline"
-              >
-                {isSignUp ? "Sign in" : "Sign up"}
-              </button>
-            </p>
+        {/* ── Right panel ── */}
+        <div className="flex-1 flex flex-col justify-center px-8 py-10 md:px-12">
+          {/* Tab switcher */}
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+            {["Sign In", "Create Account"].map((tab) => {
+              const active = tab === "Sign In" ? !isSignUp : isSignUp;
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => {
+                    if ((tab === "Sign In") === isSignUp) switchMode();
+                  }}
+                  className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                    active
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {tab}
+                </button>
+              );
+            })}
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <h3 className="text-2xl font-bold text-gray-900 mb-1">
+            {isSignUp ? "Create your account" : "Welcome back"}
+          </h3>
+          <p className="text-gray-500 text-sm mb-8">
+            {isSignUp
+              ? "Join thousands of patients on SwiftCare."
+              : "Sign in to manage your appointments and profile"}
+          </p>
+
+          <form onSubmit={onSubmit} className="space-y-5" noValidate>
             {isSignUp && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -240,7 +277,7 @@ const Login = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email address
+                Email Address
               </label>
               <input
                 type="email"
@@ -270,7 +307,7 @@ const Login = () => {
                 {!isSignUp && (
                   <Link
                     to="/forgot-password"
-                    className="text-xs text-primary hover:underline font-medium"
+                    className="text-xs text-primary font-semibold hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -292,14 +329,41 @@ const Login = () => {
                       }));
                   }}
                   onBlur={(e) => handleBlur("password", e.target.value)}
-                  className={`input-field pr-10 ${touched.password && errors.password ? "border-red-400 focus:ring-red-200" : ""}`}
+                  className={`input-field pr-11 ${touched.password && errors.password ? "border-red-400 focus:ring-red-200" : ""}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <EyeIcon />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    {showPassword ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                      />
+                    ) : (
+                      <>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </>
+                    )}
+                  </svg>
                 </button>
               </div>
               {touched.password && errors.password && (
@@ -310,29 +374,24 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-primary w-full py-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="btn-primary w-full py-3.5 text-base font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading
                 ? "Please wait..."
                 : isSignUp
                   ? "Create account"
-                  : "Sign in"}
+                  : "Sign In"}
             </button>
           </form>
 
-          {/* Mobile toggle */}
-          <p className="md:hidden text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-gray-500 mt-6">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               type="button"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setErrors({ name: "", email: "", password: "" });
-                setTouched({ name: false, email: false, password: false });
-              }}
+              onClick={switchMode}
               className="text-primary font-semibold hover:underline"
             >
-              {isSignUp ? "Sign in" : "Sign up"}
+              {isSignUp ? "Sign in" : "Create one free"}
             </button>
           </p>
         </div>
