@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import logger from "../config/logger.js";
 
 const authAdmin = async (req, res, next) => {
   try {
@@ -20,7 +21,7 @@ const authAdmin = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("[authAdmin]", error);
+    logger.error({ err: error }, "[authAdmin]");
     res.json({
       success: false,
       message: "Not authorised. Please log in again.",

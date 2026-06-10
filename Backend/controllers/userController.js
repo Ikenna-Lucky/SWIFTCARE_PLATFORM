@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctormodel.js";
 import appointmentModel from "../models/appointmentmodel.js";
+import logger from "../config/logger.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -65,7 +66,7 @@ const registerUser = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ success: true, token });
   } catch (error) {
-    console.error("[registerUser]", error);
+    logger.error({ err: error }, "[registerUser]");
     res.json({
       success: false,
       message: "Registration failed. Please try again.",
@@ -100,7 +101,7 @@ const loginUser = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ success: true, token });
   } catch (error) {
-    console.error("[loginUser]", error);
+    logger.error({ err: error }, "[loginUser]");
     res.json({ success: false, message: "Login failed. Please try again." });
   }
 };
@@ -117,7 +118,7 @@ const getProfile = async (req, res) => {
     }
     res.json({ success: true, userData });
   } catch (error) {
-    console.error("[getProfile]", error);
+    logger.error({ err: error }, "[getProfile]");
     res.json({ success: false, message: "Failed to load profile." });
   }
 };
@@ -164,7 +165,7 @@ const updateProfile = async (req, res) => {
 
     res.json({ success: true, message: "Profile updated successfully." });
   } catch (error) {
-    console.error("[updateProfile]", error);
+    logger.error({ err: error }, "[updateProfile]");
     res.json({
       success: false,
       message: "Failed to update profile. Please try again.",
@@ -204,132 +205,4 @@ const bookAppointment = async (req, res) => {
     if (slots_booked[slotDate]?.includes(slotTime)) {
       return res.json({
         success: false,
-        message: "This time slot is no longer available.",
-      });
-    }
-
-    // Reserve the slot
-    if (slots_booked[slotDate]) {
-      slots_booked[slotDate].push(slotTime);
-    } else {
-      slots_booked[slotDate] = [slotTime];
-    }
-
-    const userData = await userModel.findById(userId).select("-password");
-
-    // Store a snapshot of doc/user data at booking time so historical records stay accurate
-    const docSnapshot = docData.toObject();
-    delete docSnapshot.slots_booked;
-
-    const appointmentData = {
-      userId,
-      docId,
-      userData,
-      docData: docSnapshot,
-      amount: docData.fees,
-      slotTime,
-      slotDate,
-      date: Date.now(),
-    };
-
-    const newAppointment = new appointmentModel(appointmentData);
-    await newAppointment.save();
-
-    // Persist the updated slot map on the doctor record
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
-
-    res.json({
-      success: true,
-      message: `Appointment booked with ${docData.name}.`,
-    });
-  } catch (error) {
-    console.error("[bookAppointment]", error);
-    res.json({
-      success: false,
-      message: "Failed to book appointment. Please try again.",
-    });
-  }
-};
-
-// ─── List Appointments ────────────────────────────────────────────────────────
-
-const listAppointment = async (req, res) => {
-  try {
-    // userId injected by authUser middleware
-    const userId = req.userId;
-    const appointments = await appointmentModel.find({ userId });
-    res.json({ success: true, appointments });
-  } catch (error) {
-    console.error("[listAppointment]", error);
-    res.json({ success: false, message: "Failed to load appointments." });
-  }
-};
-
-// ─── Cancel Appointment ───────────────────────────────────────────────────────
-
-const cancelAppointment = async (req, res) => {
-  try {
-    // userId injected by authUser middleware
-    const userId = req.userId;
-    const { appointmentId } = req.body;
-
-    if (!appointmentId) {
-      return res.json({
-        success: false,
-        message: "Appointment ID is required.",
-      });
-    }
-
-    const appointmentData = await appointmentModel.findById(appointmentId);
-    if (!appointmentData) {
-      return res.json({ success: false, message: "Appointment not found." });
-    }
-
-    // Ensure the appointment belongs to the requesting user
-    if (appointmentData.userId !== userId) {
-      return res.json({ success: false, message: "Unauthorised action." });
-    }
-
-    if (appointmentData.cancelled) {
-      return res.json({
-        success: false,
-        message: "Appointment is already cancelled.",
-      });
-    }
-
-    await appointmentModel.findByIdAndUpdate(appointmentId, {
-      cancelled: true,
-    });
-
-    // Release the doctor's time slot so it becomes bookable again
-    const { docId, slotDate, slotTime } = appointmentData;
-    const doctorData = await doctorModel.findById(docId);
-    if (doctorData) {
-      const slots_booked = { ...doctorData.slots_booked };
-      if (slots_booked[slotDate]) {
-        slots_booked[slotDate] = slots_booked[slotDate].filter(
-          (t) => t !== slotTime,
-        );
-      }
-      await doctorModel.findByIdAndUpdate(docId, { slots_booked });
-    }
-
-    res.json({ success: true, message: "Appointment cancelled." });
-  } catch (error) {
-    console.error("[cancelAppointment]", error);
-    res.json({
-      success: false,
-      message: "Failed to cancel appointment. Please try again.",
-    });
-  }
-};
-
-export {
-  registerUser,
-  loginUser,
-  getProfile,
-  updateProfile,
-  bookAppointment,
-  listAppointment,
-  cancelAppointment,
-};
+        m

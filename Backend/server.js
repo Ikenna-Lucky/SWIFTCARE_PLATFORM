@@ -6,6 +6,7 @@ import connectCloudinary from "./config/cloudinary.js";
 import adminRouter from "./routes/adminRoute.js";
 import doctorRouter from "./routes/doctorRoute.js";
 import userRouter from "./routes/userRoute.js";
+import logger from "./config/logger.js";
 
 //app config
 const app = express();
@@ -35,4 +36,4 @@ app.get("/", (req, res) => {
   res.send("API WORKING ");
 });
 
-app.listen(port, () => console.log("Server started", port));
+app.listen(port, () => logger.info(`Server started on port ${port}`));

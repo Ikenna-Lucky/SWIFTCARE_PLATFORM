@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import logger from "../config/logger.js";
 
 const authDoctor = async (req, res, next) => {
   try {
@@ -15,7 +16,7 @@ const authDoctor = async (req, res, next) => {
     req.docId = token_decode.id;
     next();
   } catch (error) {
-    console.error("[authDoctor]", error);
+    logger.error({ err: error }, "[authDoctor]");
     res.json({
       success: false,
       message: "Not authorised. Please log in again.",

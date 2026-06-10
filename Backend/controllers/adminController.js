@@ -5,6 +5,7 @@ import doctorModel from "../models/doctormodel.js";
 import jwt from "jsonwebtoken";
 import appointmentModel from "../models/appointmentmodel.js";
 import userModel from "../models/usermodel.js";
+import logger from "../config/logger.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -122,7 +123,7 @@ const addDoctor = async (req, res) => {
 
     res.json({ success: true, message: "Doctor added successfully." });
   } catch (error) {
-    console.error("[addDoctor]", error);
+    logger.error({ err: error }, "[addDoctor]");
     res.json({
       success: false,
       message: "Failed to add doctor. Please try again.",
@@ -154,7 +155,7 @@ const loginAdmin = async (req, res) => {
 
     res.json({ success: false, message: "Invalid credentials." });
   } catch (error) {
-    console.error("[loginAdmin]", error);
+    logger.error({ err: error }, "[loginAdmin]");
     res.json({ success: false, message: "Login failed. Please try again." });
   }
 };
@@ -166,7 +167,7 @@ const allDoctors = async (req, res) => {
     const doctors = await doctorModel.find({}).select("-password");
     res.json({ success: true, doctors });
   } catch (error) {
-    console.error("[allDoctors]", error);
+    logger.error({ err: error }, "[allDoctors]");
     res.json({ success: false, message: "Failed to fetch doctors." });
   }
 };
@@ -178,7 +179,7 @@ const appointmentsAdmin = async (req, res) => {
     const appointments = await appointmentModel.find({});
     res.json({ success: true, appointments });
   } catch (error) {
-    console.error("[appointmentsAdmin]", error);
+    logger.error({ err: error }, "[appointmentsAdmin]");
     res.json({ success: false, message: "Failed to fetch appointments." });
   }
 };
@@ -227,7 +228,7 @@ const cancelAppointmentByAdmin = async (req, res) => {
 
     res.json({ success: true, message: "Appointment cancelled." });
   } catch (error) {
-    console.error("[cancelAppointmentByAdmin]", error);
+    logger.error({ err: error }, "[cancelAppointmentByAdmin]");
     res.json({
       success: false,
       message: "Failed to cancel appointment. Please try again.",
@@ -258,7 +259,7 @@ const adminDashboard = async (req, res) => {
 
     res.json({ success: true, dashData });
   } catch (error) {
-    console.error("[adminDashboard]", error);
+    logger.error({ err: error }, "[adminDashboard]");
     res.json({ success: false, message: "Failed to load dashboard data." });
   }
 };
