@@ -20,19 +20,16 @@ const MONTHS = [
   "Dec",
 ];
 
-/** Converts "D_M_YYYY" slot date into a readable "D Mon YYYY" string */
 const formatSlotDate = (slotDate) => {
   const [day, month, year] = slotDate.split("_");
   return `${day} ${MONTHS[Number(month)]} ${year}`;
 };
 
-/** Converts "D_M_YYYY" to a timestamp for sorting */
 const slotDateToTimestamp = (slotDate) => {
   const [day, month, year] = slotDate.split("_").map(Number);
   return new Date(year, month - 1, day).getTime();
 };
 
-/** Maps appointment state to a display label + Tailwind classes */
 const getStatus = (appt) => {
   if (appt.cancelled)
     return {
@@ -55,11 +52,10 @@ const getStatus = (appt) => {
   };
 };
 
-/* ─── Reusable appointment card ─────────────────────────────────────── */
-
-const AppointmentCard = ({ appt, onCancel, cancellingId }) => {
+const AppointmentCard = ({ appt, onCancel, onPay, cancellingId, payingId }) => {
   const { label, style } = getStatus(appt);
-  const isUpcoming = !appt.cancelled && !appt.isCompleted;
+  const isActive = !appt.cancelled && !appt.isCompleted;
+  const isPaid = appt.payment;
 
   return (
     <div className="card p-5 sm:p-6">
@@ -73,7 +69,7 @@ const AppointmentCard = ({ appt, onCancel, cancellingId }) => {
           />
         </div>
 
-        {/* Appointment details */}
+        {/* Details */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
@@ -82,7 +78,6 @@ const AppointmentCard = ({ appt, onCancel, cancellingId }) => {
               </p>
               <p className="text-primary text-sm">{appt.docData.speciality}</p>
             </div>
-            {/* Status badge */}
             <span
               className={`text-xs font-medium px-3 py-1 rounded-full flex-shrink-0 ${style}`}
             >
@@ -90,7 +85,6 @@ const AppointmentCard = ({ appt, onCancel, cancellingId }) => {
             </span>
           </div>
 
-          {/* Meta: date, time, address */}
           <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
             <div className="flex items-center gap-1.5">
               <svg
@@ -145,269 +139,240 @@ const AppointmentCard = ({ appt, onCancel, cancellingId }) => {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                {appt.docData.address.line1}
+                <span className="truncate">{appt.docData.address.line1}</span>
               </div>
             )}
+            <div className="flex items-center gap-1.5">
+              <svg
+                className="w-4 h-4 text-gray-400 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="font-medium text-gray-700">${appt.amount}</span>
+            </div>
           </div>
-        </div>
 
-        {/* Cancel button — only for upcoming (not yet cancelled/completed) */}
-        {isUpcoming && (
-          <div className="flex sm:flex-col gap-2 items-start sm:items-end justify-end flex-shrink-0">
-            <button
-              onClick={() => onCancel(appt._id)}
-              disabled={cancellingId === appt._id}
-              className="text-xs font-medium px-4 py-2 rounded-full border border-red-200 text-red-500 hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {cancellingId === appt._id ? "Cancelling…" : "Cancel"}
-            </button>
-          </div>
-        )}
+          {/* Actions */}
+          {isActive && (
+            <div className="flex items-center gap-3 mt-4">
+              {!isPaid && (
+                <button
+                  onClick={() => onPay(appt._id)}
+                  disabled={payingId === appt._id}
+                  className="btn-primary px-5 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {payingId === appt._id ? "Redirecting..." : "Pay Now"}
+                </button>
+              )}
+              <button
+                onClick={() => onCancel(appt._id)}
+                disabled={cancellingId === appt._id}
+                className="px-5 py-2 text-sm font-medium border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {cancellingId === appt._id ? "Cancelling..." : "Cancel"}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-/* ─── Tab button ─────────────────────────────────────────────────────── */
-
-const Tab = ({ label, count, active, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`relative pb-3 text-sm font-medium transition-colors focus:outline-none ${
-      active ? "text-primary" : "text-gray-400 hover:text-gray-600"
-    }`}
-  >
-    <span className="flex items-center gap-2">
-      {label}
-      {count > 0 && (
-        <span
-          className={`inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-xs font-semibold ${
-            active ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
-          }`}
-        >
-          {count}
-        </span>
-      )}
-    </span>
-    {/* Active underline indicator */}
-    <span
-      className={`absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200 ${
-        active ? "bg-primary" : "bg-transparent"
-      }`}
-    />
-  </button>
-);
-
-/* ─── Empty state ────────────────────────────────────────────────────── */
-
-const EmptyState = ({ tab, onNavigate }) => (
-  <div className="flex flex-col items-center justify-center py-16 bg-gray-50 rounded-2xl text-gray-400">
-    <svg
-      className="w-14 h-14 mb-4 opacity-30"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1}
-        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-      />
-    </svg>
-    {tab === "upcoming" ? (
-      <>
-        <p className="text-base font-medium text-gray-500">
-          No upcoming appointments
-        </p>
-        <p className="text-sm mt-1 mb-6">
-          Book your next appointment with a SwiftCare doctor.
-        </p>
-        <button onClick={onNavigate} className="btn-primary text-sm">
-          Find a Doctor
-        </button>
-      </>
-    ) : (
-      <>
-        <p className="text-base font-medium text-gray-500">
-          No past appointments
-        </p>
-        <p className="text-sm mt-1">
-          Your completed and cancelled appointments will appear here.
-        </p>
-      </>
-    )}
+const EmptyState = ({ message, sub }) => (
+  <div className="flex flex-col items-center justify-center py-16 text-center">
+    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+      <svg
+        className="w-8 h-8 text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    </div>
+    <p className="text-gray-700 font-medium">{message}</p>
+    {sub && <p className="text-gray-400 text-sm mt-1">{sub}</p>}
   </div>
 );
 
-/* ─── Page ───────────────────────────────────────────────────────────── */
-
 const MyAppointment = () => {
-  const { backendUrl, token, getDoctorsData } = useContext(AppContext);
+  const { backendUrl, token } = useContext(AppContext);
   const navigate = useNavigate();
 
   const [appointments, setAppointments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const [payingId, setPayingId] = useState(null);
 
   const fetchAppointments = async () => {
-    setIsLoading(true);
     try {
-      const { data } = await axios.get(`${backendUrl}/api/user/appointments`, {
+      const { data } = await axios.get(backendUrl + "/api/user/appointments", {
         headers: { token },
       });
       if (data.success) {
-        setAppointments(data.appointments);
-      } else {
-        toast.error(data.message);
+        setAppointments([...data.appointments].reverse());
       }
-    } catch {
-      toast.error("Failed to load appointments. Please refresh the page.");
+    } catch (err) {
+      toast.error("Failed to load appointments.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      fetchAppointments();
+    } else {
+      navigate("/login");
+    }
+  }, [token]);
 
   const handleCancel = async (appointmentId) => {
     setCancellingId(appointmentId);
     try {
       const { data } = await axios.post(
-        `${backendUrl}/api/user/cancel-appointment`,
+        backendUrl + "/api/user/cancel-appointment",
         { appointmentId },
         { headers: { token } },
       );
       if (data.success) {
         toast.success(data.message);
         fetchAppointments();
-        getDoctorsData();
       } else {
         toast.error(data.message);
       }
-    } catch {
-      toast.error("Failed to cancel appointment. Please try again.");
+    } catch (err) {
+      toast.error(err.message);
     } finally {
       setCancellingId(null);
     }
   };
 
-  useEffect(() => {
-    if (token) fetchAppointments();
-  }, [token]);
-
-  // Split into two groups.
-  // Upcoming: not cancelled and not completed — sorted soonest first.
-  // Past: cancelled or completed — sorted most recent first.
-  const upcoming = appointments
-    .filter((a) => !a.cancelled && !a.isCompleted)
-    .sort(
-      (a, b) =>
-        slotDateToTimestamp(a.slotDate) - slotDateToTimestamp(b.slotDate),
-    );
-
-  const past = appointments
-    .filter((a) => a.cancelled || a.isCompleted)
-    .sort(
-      (a, b) =>
-        slotDateToTimestamp(b.slotDate) - slotDateToTimestamp(a.slotDate),
-    );
-
-  const displayed = activeTab === "upcoming" ? upcoming : past;
-
-  const handleNavigate = () => {
-    navigate("/doctors");
-    window.scrollTo(0, 0);
+  const handlePay = async (appointmentId) => {
+    setPayingId(appointmentId);
+    try {
+      const { data } = await axios.post(
+        backendUrl + "/api/user/initialize-payment",
+        { appointmentId },
+        { headers: { token } },
+      );
+      if (data.success) {
+        window.location.href = data.authorization_url;
+      } else {
+        toast.error(data.message);
+      }
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setPayingId(null);
+    }
   };
 
-  return (
-    <div className="py-8">
-      {/* ── Page header ── */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
-          {!isLoading && (
-            <p className="text-sm text-gray-500 mt-1">
-              {appointments.length} total appointment
-              {appointments.length !== 1 ? "s" : ""}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={handleNavigate}
-          className="btn-primary text-sm hidden sm:block"
-        >
-          Book New
-        </button>
-      </div>
+  const now = Date.now();
+  const upcoming = appointments.filter(
+    (a) =>
+      !a.cancelled &&
+      !a.isCompleted &&
+      slotDateToTimestamp(a.slotDate) >= now - 86400000,
+  );
+  const past = appointments.filter(
+    (a) =>
+      a.cancelled ||
+      a.isCompleted ||
+      slotDateToTimestamp(a.slotDate) < now - 86400000,
+  );
 
-      {/* ── Loading skeletons ── */}
-      {isLoading ? (
-        <div className="flex flex-col gap-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-32 bg-gray-100 rounded-2xl animate-pulse"
-            />
-          ))}
-        </div>
-      ) : appointments.length === 0 ? (
-        /* ── Fully empty state (no appointments at all) ── */
-        <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl text-gray-400">
-          <svg
-            className="w-14 h-14 mb-4 opacity-30"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1}
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-            />
-          </svg>
-          <p className="text-base font-medium text-gray-500">
-            No appointments yet
-          </p>
-          <p className="text-sm mt-1 mb-6">
-            Book your first appointment with a SwiftCare doctor.
-          </p>
-          <button onClick={handleNavigate} className="btn-primary text-sm">
-            Find a Doctor
-          </button>
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 page-enter">
+        <div className="h-8 bg-gray-200 rounded-xl w-48 mb-8 animate-pulse" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="card p-6 mb-4 animate-pulse">
+            <div className="flex gap-5">
+              <div className="w-24 h-24 rounded-2xl bg-gray-200 flex-shrink-0" />
+              <div className="flex-1 space-y-3">
+                <div className="h-5 bg-gray-200 rounded-lg w-40" />
+                <div className="h-4 bg-gray-100 rounded-lg w-28" />
+                <div className="h-4 bg-gray-100 rounded-lg w-56" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 page-enter">
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">My Appointments</h1>
+      <p className="text-gray-500 mb-8">
+        {appointments.length} appointment{appointments.length !== 1 ? "s" : ""}{" "}
+        total
+      </p>
+
+      {appointments.length === 0 ? (
+        <div className="card">
+          <EmptyState
+            message="No appointments yet"
+            sub="Book your first appointment with one of our doctors."
+          />
         </div>
       ) : (
         <>
-          {/* ── Tabs ── */}
-          <div className="flex gap-6 border-b border-gray-100 mb-6">
-            <Tab
-              label="Upcoming"
-              count={upcoming.length}
-              active={activeTab === "upcoming"}
-              onClick={() => setActiveTab("upcoming")}
-            />
-            <Tab
-              label="Past"
-              count={past.length}
-              active={activeTab === "past"}
-              onClick={() => setActiveTab("past")}
-            />
-          </div>
+          {/* Upcoming */}
+          {upcoming.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                Upcoming ({upcoming.length})
+              </h2>
+              <div className="space-y-4">
+                {upcoming.map((appt) => (
+                  <AppointmentCard
+                    key={appt._id}
+                    appt={appt}
+                    onCancel={handleCancel}
+                    onPay={handlePay}
+                    cancellingId={cancellingId}
+                    payingId={payingId}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-          {/* ── Tab content ── */}
-          {displayed.length === 0 ? (
-            <EmptyState tab={activeTab} onNavigate={handleNavigate} />
-          ) : (
-            <div className="flex flex-col gap-4">
-              {displayed.map((appt) => (
-                <AppointmentCard
-                  key={appt._id}
-                  appt={appt}
-                  onCancel={handleCancel}
-                  cancellingId={cancellingId}
-                />
-              ))}
-            </div>
+          {/* Past / completed */}
+          {past.length > 0 && (
+            <section>
+              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                Past ({past.length})
+              </h2>
+              <div className="space-y-4">
+                {past.map((appt) => (
+                  <AppointmentCard
+                    key={appt._id}
+                    appt={appt}
+                    onCancel={handleCancel}
+                    onPay={handlePay}
+                    cancellingId={cancellingId}
+                    payingId={payingId}
+                  />
+                ))}
+              </div>
+            </section>
           )}
         </>
       )}

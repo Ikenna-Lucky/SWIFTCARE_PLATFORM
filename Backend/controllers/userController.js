@@ -1,11 +1,19 @@
 import validator from "validator";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import userModel from "../models/usermodel.js";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctormodel.js";
 import appointmentModel from "../models/appointmentmodel.js";
 import logger from "../config/logger.js";
+import sendEmail from "../config/mailer.js";
+import axios from "axios";
+import {
+  appointmentConfirmationEmail,
+  appointmentCancellationEmail,
+  passwordResetEmail,
+} from "../utils/emailTemplates.js";
 
 // --- Helpers ---
 
@@ -89,12 +97,110 @@ const loginUser = async (req, res) => {
   }
 };
 
+// --- Forgot Password ---
+
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.json({ success: false, message: "Email is required." });
+    }
+    const user = await userModel.findOne({ email });
+    // Always respond success to prevent email enumeration
+    if (!user) {
+      return res.json({
+        success: true,
+        message: "If that email exists, a reset link has been sent.",
+      });
+    }
+    // Generate secure token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    const expiry = Date.now() + 60 * 60 * 1000; // 1 hour
+
+    await userModel.findByIdAndUpdate(user._id, {
+      resetPasswordToken: hashedToken,
+      resetPasswordExpiry: expiry,
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+    await sendEmail(
+      user.email,
+      "Reset your SwiftCare password",
+      passwordResetEmail({ name: user.name, resetUrl }),
+    );
+
+    res.json({
+      success: true,
+      message: "If that email exists, a reset link has been sent.",
+    });
+  } catch (error) {
+    logger.error({ err: error }, "[forgotPassword]");
+    res.json({
+      success: false,
+      message: "Failed to process request. Please try again.",
+    });
+  }
+};
+
+// --- Reset Password ---
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.json({
+        success: false,
+        message: "Token and new password are required.",
+      });
+    }
+    if (password.length < 8) {
+      return res.json({
+        success: false,
+        message: "Password must be at least 8 characters.",
+      });
+    }
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await userModel.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpiry: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "Reset link is invalid or has expired.",
+      });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    await userModel.findByIdAndUpdate(user._id, {
+      password: hashedPassword,
+      resetPasswordToken: undefined,
+      resetPasswordExpiry: undefined,
+    });
+    res.json({
+      success: true,
+      message: "Password reset successfully. You can now log in.",
+    });
+  } catch (error) {
+    logger.error({ err: error }, "[resetPassword]");
+    res.json({
+      success: false,
+      message: "Failed to reset password. Please try again.",
+    });
+  }
+};
+
 // --- Get Profile ---
 
 const getProfile = async (req, res) => {
   try {
-    const userId = req.userId;
-    const userData = await userModel.findById(userId).select("-password");
+    const userData = await userModel
+      .findById(req.userId)
+      .select("-password -resetPasswordToken -resetPasswordExpiry");
     if (!userData) {
       return res.json({ success: false, message: "User not found." });
     }
@@ -186,7 +292,9 @@ const bookAppointment = async (req, res) => {
       slots_booked[slotDate] = [slotTime];
     }
 
-    const userData = await userModel.findById(userId).select("-password");
+    const userData = await userModel
+      .findById(userId)
+      .select("-password -resetPasswordToken -resetPasswordExpiry");
     const docSnapshot = docData.toObject();
     delete docSnapshot.slots_booked;
 
@@ -205,6 +313,38 @@ const bookAppointment = async (req, res) => {
     await newAppointment.save();
     await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
+    // Send confirmation email (non-blocking)
+    const [day, month, year] = slotDate.split("_");
+    const months = [
+      "",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const readableDate = `${day} ${months[Number(month)]} ${year}`;
+
+    sendEmail(
+      userData.email,
+      "Your appointment is confirmed — SwiftCare",
+      appointmentConfirmationEmail({
+        patientName: userData.name,
+        doctorName: docData.name,
+        speciality: docData.speciality,
+        slotDate: readableDate,
+        slotTime,
+        fees: docData.fees,
+      }),
+    );
+
     res.json({
       success: true,
       message: "Appointment booked with " + docData.name + ".",
@@ -222,8 +362,7 @@ const bookAppointment = async (req, res) => {
 
 const listAppointment = async (req, res) => {
   try {
-    const userId = req.userId;
-    const appointments = await appointmentModel.find({ userId });
+    const appointments = await appointmentModel.find({ userId: req.userId });
     res.json({ success: true, appointments });
   } catch (error) {
     logger.error({ err: error }, "[listAppointment]");
@@ -274,6 +413,38 @@ const cancelAppointment = async (req, res) => {
       await doctorModel.findByIdAndUpdate(docId, { slots_booked });
     }
 
+    // Send cancellation email (non-blocking)
+    const userData = await userModel.findById(userId).select("name email");
+    if (userData && doctorData) {
+      const [day, month, year] = slotDate.split("_");
+      const months = [
+        "",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      sendEmail(
+        userData.email,
+        "Your appointment has been cancelled — SwiftCare",
+        appointmentCancellationEmail({
+          patientName: userData.name,
+          doctorName: doctorData.name,
+          slotDate: `${day} ${months[Number(month)]} ${year}`,
+          slotTime,
+          cancelledBy: "patient",
+        }),
+      );
+    }
+
     res.json({ success: true, message: "Appointment cancelled." });
   } catch (error) {
     logger.error({ err: error }, "[cancelAppointment]");
@@ -284,12 +455,139 @@ const cancelAppointment = async (req, res) => {
   }
 };
 
+// --- Initialize Paystack Payment ---
+
+const initializePayment = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.json({
+        success: false,
+        message: "Appointment ID is required.",
+      });
+    }
+    const appointment = await appointmentModel.findById(appointmentId);
+    if (!appointment) {
+      return res.json({ success: false, message: "Appointment not found." });
+    }
+    if (appointment.userId !== userId) {
+      return res.json({ success: false, message: "Unauthorised action." });
+    }
+    if (appointment.payment) {
+      return res.json({
+        success: false,
+        message: "This appointment has already been paid for.",
+      });
+    }
+    if (appointment.cancelled) {
+      return res.json({
+        success: false,
+        message: "Cannot pay for a cancelled appointment.",
+      });
+    }
+
+    const userData = await userModel.findById(userId).select("email name");
+    const reference = `appt_${appointmentId}_${Date.now()}`;
+
+    const response = await axios.post(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        email: userData.email,
+        amount: appointment.amount * 100, // Paystack uses kobo/pesewas (smallest unit)
+        reference,
+        callback_url: `${process.env.FRONTEND_URL}/payment-verify`,
+        metadata: { appointmentId, userId },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (response.data.status) {
+      res.json({
+        success: true,
+        authorization_url: response.data.data.authorization_url,
+        reference,
+      });
+    } else {
+      res.json({ success: false, message: "Failed to initialize payment." });
+    }
+  } catch (error) {
+    logger.error({ err: error }, "[initializePayment]");
+    res.json({
+      success: false,
+      message: "Payment initialization failed. Please try again.",
+    });
+  }
+};
+
+// --- Verify Paystack Payment ---
+
+const verifyPayment = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { reference } = req.body;
+
+    if (!reference) {
+      return res.json({
+        success: false,
+        message: "Payment reference is required.",
+      });
+    }
+
+    const response = await axios.get(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+      },
+    );
+
+    if (!response.data.status || response.data.data.status !== "success") {
+      return res.json({
+        success: false,
+        message: "Payment verification failed.",
+      });
+    }
+
+    const { appointmentId } = response.data.data.metadata;
+    const appointment = await appointmentModel.findById(appointmentId);
+
+    if (!appointment) {
+      return res.json({ success: false, message: "Appointment not found." });
+    }
+    if (appointment.userId !== userId) {
+      return res.json({ success: false, message: "Unauthorised action." });
+    }
+
+    await appointmentModel.findByIdAndUpdate(appointmentId, { payment: true });
+    res.json({
+      success: true,
+      message: "Payment confirmed. Your appointment is all set!",
+    });
+  } catch (error) {
+    logger.error({ err: error }, "[verifyPayment]");
+    res.json({
+      success: false,
+      message: "Payment verification failed. Please contact support.",
+    });
+  }
+};
+
 export {
   registerUser,
   loginUser,
+  forgotPassword,
+  resetPassword,
   getProfile,
   updateProfile,
   bookAppointment,
   listAppointment,
   cancelAppointment,
+  initializePayment,
+  verifyPayment,
 };
