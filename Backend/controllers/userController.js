@@ -5,217 +5,324 @@ import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 import doctorModel from "../models/doctormodel.js";
 import appointmentModel from "../models/appointmentmodel.js";
-import razorpay from "razorpay";
 
-//API TO REGISTER USER
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Safely parses a JSON string. Returns the parsed value on success, null on failure.
+ * Used for address fields sent as JSON strings from multipart form data.
+ */
+const safeParseJSON = (str) => {
+  try {
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
+};
+
+// ─── Register ─────────────────────────────────────────────────────────────────
+
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
     if (!name || !email || !password) {
-      return res.json({ success: false, message: "Fill all the spaces" });
+      return res.json({
+        success: false,
+        message: "Please fill in all fields.",
+      });
     }
 
-    //validating email format
     if (!validator.isEmail(email)) {
-      return res.json({ success: false, message: "Invalid Email" });
+      return res.json({
+        success: false,
+        message: "Please enter a valid email address.",
+      });
     }
-    // Validating a strong password
+
     if (password.length < 8) {
-      return res.json({ success: false, message: "Invalid password" });
+      return res.json({
+        success: false,
+        message: "Password must be at least 8 characters.",
+      });
     }
-    //Hashing User password
-    const salt = await bcrypt.genSalt(10); // Can provide a value b/w 5-15 , above 10 make it too strong
+
+    // Reject duplicate email with a friendly message instead of a Mongo key error
+    const existing = await userModel.findOne({ email });
+    if (existing) {
+      return res.json({
+        success: false,
+        message: "An account with this email already exists.",
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const userData = {
-      name,
-      email,
-      password: hashedPassword,
-    };
-    const newUser = new userModel(userData);
+    const newUser = new userModel({ name, email, password: hashedPassword });
     const user = await newUser.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ success: true, token });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("[registerUser]", error);
+    res.json({
+      success: false,
+      message: "Registration failed. Please try again.",
+    });
   }
 };
 
-//API FOR USER LOGIN
+// ─── Login ────────────────────────────────────────────────────────────────────
 
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.json({
+        success: false,
+        message: "Email and password are required.",
+      });
+    }
+
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.json({ success: false, message: "User doesn't exist" });
+      // Generic message — don't reveal whether the email exists
+      return res.json({ success: false, message: "Invalid credentials." });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
-    if (isMatch) {
-      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-      return res.json({ success: true, token });
-    } else {
-      return res.json({ success: false, message: "Invalid credentials" });
+    if (!isMatch) {
+      return res.json({ success: false, message: "Invalid credentials." });
     }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    res.json({ success: true, token });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("[loginUser]", error);
+    res.json({ success: false, message: "Login failed. Please try again." });
   }
 };
 
-//API TO GET USER PROFILE DATA
+// ─── Get Profile ──────────────────────────────────────────────────────────────
+
 const getProfile = async (req, res) => {
   try {
-    // userId is injected by authUser middleware via req.userId
+    // userId injected by authUser middleware
     const userId = req.userId;
     const userData = await userModel.findById(userId).select("-password");
+    if (!userData) {
+      return res.json({ success: false, message: "User not found." });
+    }
     res.json({ success: true, userData });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("[getProfile]", error);
+    res.json({ success: false, message: "Failed to load profile." });
   }
 };
 
-//API TO UPDATE USER PROFILE
+// ─── Update Profile ───────────────────────────────────────────────────────────
+
 const updateProfile = async (req, res) => {
   try {
-    // userId is injected by authUser middleware via req.userId
+    // userId injected by authUser middleware
     const userId = req.userId;
     const { name, phone, dob, gender, address } = req.body;
     const imageFile = req.file;
 
     if (!name || !phone || !dob || !gender || !address) {
-      return res.json({ success: false, message: "Data missing" });
+      return res.json({
+        success: false,
+        message: "Please fill in all required fields.",
+      });
+    }
+
+    // address is sent as a JSON string from multipart form data
+    const parsedAddress = safeParseJSON(address);
+    if (!parsedAddress) {
+      return res.json({ success: false, message: "Invalid address format." });
     }
 
     await userModel.findByIdAndUpdate(userId, {
       name,
       phone,
-      address: JSON.parse(address),
+      address: parsedAddress,
       dob,
       gender,
     });
+
+    // Upload new avatar if provided
     if (imageFile) {
-      //Upload image to cloudinary
       const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
         resource_type: "image",
       });
-      const imageUrl = imageUpload.secure_url;
-      await userModel.findByIdAndUpdate(userId, { image: imageUrl });
+      await userModel.findByIdAndUpdate(userId, {
+        image: imageUpload.secure_url,
+      });
     }
-    res.json({ success: true, message: "Profile Updated" });
+
+    res.json({ success: true, message: "Profile updated successfully." });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("[updateProfile]", error);
+    res.json({
+      success: false,
+      message: "Failed to update profile. Please try again.",
+    });
   }
 };
 
-// API to book appointment
+// ─── Book Appointment ─────────────────────────────────────────────────────────
+
 const bookAppointment = async (req, res) => {
   try {
-    // userId is injected by authUser middleware via req.userId
+    // userId injected by authUser middleware
     const userId = req.userId;
     const { docId, slotTime, slotDate } = req.body;
-    //getting the doctor data
-    const docData = await doctorModel.findById(docId).select("-password");
 
-    if (!docData.available) {
-      return res.json({ success: false, message: "Doctor not available" });
+    if (!docId || !slotTime || !slotDate) {
+      return res.json({
+        success: false,
+        message: "Doctor, date, and time slot are required.",
+      });
     }
 
-    let slots_booked = docData.slots_booked;
+    const docData = await doctorModel.findById(docId).select("-password");
+    if (!docData) {
+      return res.json({ success: false, message: "Doctor not found." });
+    }
 
-    // checking for slot availability
+    if (!docData.available) {
+      return res.json({
+        success: false,
+        message: "This doctor is currently unavailable.",
+      });
+    }
+
+    // Check if the requested slot is already taken
+    const slots_booked = { ...docData.slots_booked };
+    if (slots_booked[slotDate]?.includes(slotTime)) {
+      return res.json({
+        success: false,
+        message: "This time slot is no longer available.",
+      });
+    }
+
+    // Reserve the slot
     if (slots_booked[slotDate]) {
-      if (slots_booked[slotDate].includes(slotTime)) {
-        return res.json({ success: false, message: "slot not available" });
-      } else {
-        slots_booked[slotDate].push(slotTime);
-      }
-    } else {
-      slots_booked[slotDate] = [];
       slots_booked[slotDate].push(slotTime);
+    } else {
+      slots_booked[slotDate] = [slotTime];
     }
 
     const userData = await userModel.findById(userId).select("-password");
-    delete docData.slots_booked;
+
+    // Store a snapshot of doc/user data at booking time so historical records stay accurate
+    const docSnapshot = docData.toObject();
+    delete docSnapshot.slots_booked;
 
     const appointmentData = {
       userId,
       docId,
       userData,
-      docData,
+      docData: docSnapshot,
       amount: docData.fees,
       slotTime,
       slotDate,
       date: Date.now(),
     };
+
     const newAppointment = new appointmentModel(appointmentData);
     await newAppointment.save();
-    // Save new slots data in docData
+
+    // Persist the updated slot map on the doctor record
     await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
     res.json({
       success: true,
-      message: `Successfully Booked Appointment with ${docData.name}`,
+      message: `Appointment booked with ${docData.name}.`,
     });
   } catch (error) {
-    console.log(error);
-    return res.json({ success: false, message: error.message });
+    console.error("[bookAppointment]", error);
+    res.json({
+      success: false,
+      message: "Failed to book appointment. Please try again.",
+    });
   }
 };
 
-//API Function to get the list of doctors that user has booked
+// ─── List Appointments ────────────────────────────────────────────────────────
+
 const listAppointment = async (req, res) => {
   try {
-    // userId is injected by authUser middleware via req.userId
+    // userId injected by authUser middleware
     const userId = req.userId;
     const appointments = await appointmentModel.find({ userId });
     res.json({ success: true, appointments });
   } catch (error) {
-    console.log(error);
-    return res.json({ success: false, message: error.message });
+    console.error("[listAppointment]", error);
+    res.json({ success: false, message: "Failed to load appointments." });
   }
 };
 
-//API to cancel appointment made
+// ─── Cancel Appointment ───────────────────────────────────────────────────────
+
 const cancelAppointment = async (req, res) => {
   try {
-    // userId is injected by authUser middleware via req.userId
+    // userId injected by authUser middleware
     const userId = req.userId;
     const { appointmentId } = req.body;
-    const appointmentData = await appointmentModel.findById(appointmentId);
-    //verify appointment user
-    if (appointmentData.userId !== userId) {
-      return res.json({ success: false, message: "Unauthorized action" });
+
+    if (!appointmentId) {
+      return res.json({
+        success: false,
+        message: "Appointment ID is required.",
+      });
     }
+
+    const appointmentData = await appointmentModel.findById(appointmentId);
+    if (!appointmentData) {
+      return res.json({ success: false, message: "Appointment not found." });
+    }
+
+    // Ensure the appointment belongs to the requesting user
+    if (appointmentData.userId !== userId) {
+      return res.json({ success: false, message: "Unauthorised action." });
+    }
+
+    if (appointmentData.cancelled) {
+      return res.json({
+        success: false,
+        message: "Appointment is already cancelled.",
+      });
+    }
+
     await appointmentModel.findByIdAndUpdate(appointmentId, {
       cancelled: true,
     });
 
-    //releasing doctors slot
+    // Release the doctor's time slot so it becomes bookable again
     const { docId, slotDate, slotTime } = appointmentData;
     const doctorData = await doctorModel.findById(docId);
-    let slots_booked = doctorData.slots_booked;
-    slots_booked[slotDate] = slots_booked[slotDate].filter(
-      (e) => e !== slotTime,
-    );
-    await doctorModel.findByIdAndUpdate(docId, { slots_booked });
-    res.json({ success: true, message: "Appointment Cancelled" });
+    if (doctorData) {
+      const slots_booked = { ...doctorData.slots_booked };
+      if (slots_booked[slotDate]) {
+        slots_booked[slotDate] = slots_booked[slotDate].filter(
+          (t) => t !== slotTime,
+        );
+      }
+      await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+    }
+
+    res.json({ success: true, message: "Appointment cancelled." });
   } catch (error) {
-    console.log(error);
-    return res.json({ success: false, message: error.message });
+    console.error("[cancelAppointment]", error);
+    res.json({
+      success: false,
+      message: "Failed to cancel appointment. Please try again.",
+    });
   }
 };
-
-//API to make payment of booked appointment using razorpay
-// const paymentRazorPay = async (req, res) => {
-//   const razorpayInstance = new razorpay({
-//     key_id: "",
-//     key_secret: "",
-//   });
-// };
 
 export {
   registerUser,

@@ -1,14 +1,12 @@
 import jwt from "jsonwebtoken";
 
-// Doctor authentication middleware
 const authDoctor = async (req, res, next) => {
-  // the next here is a callback function
   try {
     const { dtoken } = req.headers;
     if (!dtoken) {
       return res.json({
         success: false,
-        message: "Not Authorized,Login Again",
+        message: "Not authorised. Please log in again.",
       });
     }
 
@@ -17,8 +15,11 @@ const authDoctor = async (req, res, next) => {
     req.docId = token_decode.id;
     next();
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("[authDoctor]", error);
+    res.json({
+      success: false,
+      message: "Not authorised. Please log in again.",
+    });
   }
 };
 
