@@ -1,23 +1,188 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* {
-  font-family: Outfit;
+/* ─── Base resets ──────────────────────────────────────────────────── */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply text-gray-800 bg-white antialiased;
+    font-family: "Outfit", sans-serif;
+  }
+
+  * {
+    font-family: "Outfit", sans-serif;
+  }
 }
 
+/* ─── Reusable component classes ──────────────────────────────────── */
+@layer components {
+  /* Primary filled button */
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-2.5 rounded-full font-medium
+           hover:bg-primary-dark transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary/30
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Outlined / ghost button */
+  .btn-outline {
+    @apply border border-primary text-primary px-6 py-2.5 rounded-full font-medium
+           hover:bg-primary hover:text-white transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary/30;
+  }
+
+  /* White card with subtle shadow */
+  .card {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-card
+           hover:shadow-card-hover transition-shadow duration-300;
+  }
+
+  /* Consistent form input */
+  .input-field {
+    @apply w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+           text-gray-800 placeholder-gray-400 bg-white
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
+           transition-colors duration-200;
+  }
+
+  /* Section heading */
+  .section-title {
+    @apply text-3xl font-bold text-gray-900;
+  }
+
+  /* Section sub-copy */
+  .section-subtitle {
+    @apply text-gray-500 text-sm leading-relaxed;
+  }
+}
+
+/* ─── Active NavLink indicator ────────────────────────────────────── */
 .active hr {
   @apply block;
 }
 
+/* ─── Hide scrollbars (keep scroll functional) ────────────────────── */
 ::-webkit-scrollbar {
   @apply hidden;
 }
 
+/* ─── Mobile active nav link highlight ───────────────────────────── */
 @media (max-width: 740px) {
   .active p {
-    @apply text-white bg-primary
+    @apply text-primary;
   }
+}
+
+/* ─── Scroll-reveal base states ──────────────────────────────────── */
+
+/* Elements start invisible; .is-visible is toggled by useInView */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s ease;
+}
+.reveal-right {
+  opacity: 0;
+  transform: translateX(32px);
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s ease;
+}
+.reveal.is-visible,
+.reveal-left.is-visible,
+.reveal-right.is-visible {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* Stagger delay helpers — applied as sibling modifiers */
+.delay-1 {
+  transition-delay: 80ms;
+}
+.delay-2 {
+  transition-delay: 160ms;
+}
+.delay-3 {
+  transition-delay: 240ms;
+}
+.delay-4 {
+  transition-delay: 320ms;
+}
+.delay-5 {
+  transition-delay: 400ms;
+}
+.delay-6 {
+  transition-delay: 480ms;
+}
+
+/* ─── Hero load animations (above the fold — no IntersectionObserver) */
+@keyframes heroUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes heroRight {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes heroFloat {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.hero-up {
+  animation: heroUp 0.65s ease both;
+}
+.hero-right {
+  animation: heroRight 0.65s ease both;
+}
+.hero-float {
+  animation: heroFloat 0.7s ease both;
+}
+
+/* ─── Page transition — fade + subtle upward drift ───────────────── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.25s ease-out both;
 }

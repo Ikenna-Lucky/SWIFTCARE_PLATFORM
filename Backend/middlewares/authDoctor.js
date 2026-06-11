@@ -1,23 +1,24 @@
 import jwt from "jsonwebtoken";
+import logger from "../config/logger.js";
 
-// Doctor authentication middleware
 const authDoctor = async (req, res, next) => {
-  // the next here is a callback function
   try {
     const { dtoken } = req.headers;
     if (!dtoken) {
       return res.json({
         success: false,
-        message: "Not Authorized,Login Again",
+        message: "Not authorised. Please log in again.",
       });
     }
-
-    const token_decode = jwt.verify(dtoken, process.env.JWT_SECRET); // To decode the generated token
-    req.body.docId = token_decode.id;
+    const token_decode = jwt.verify(dtoken, process.env.JWT_SECRET);
+    req.docId = token_decode.id;
     next();
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error({ err: error }, "[authDoctor]");
+    res.json({
+      success: false,
+      message: "Not authorised. Please log in again.",
+    });
   }
 };
 

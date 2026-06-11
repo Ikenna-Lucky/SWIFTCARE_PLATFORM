@@ -6,12 +6,12 @@ import Banner from "../components/Banner";
 
 const Home = () => {
   return (
-    <div>
+    <main>
       <Header />
       <SpecialityMenu />
       <TopDoctors />
       <Banner />
-    </div>
+    </main>
   );
 };
 

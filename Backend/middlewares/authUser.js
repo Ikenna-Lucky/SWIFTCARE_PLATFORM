@@ -1,23 +1,24 @@
 import jwt from "jsonwebtoken";
+import logger from "../config/logger.js";
 
-// user authentication middleware
 const authUser = async (req, res, next) => {
-  // the next here is a callback function
   try {
     const { token } = req.headers;
     if (!token) {
       return res.json({
         success: false,
-        message: "Not Authorized,Login Again",
+        message: "Not authorised. Please log in again.",
       });
     }
-
-    const token_decode = jwt.verify(token, process.env.JWT_SECRET); // To decode the generated token
-    req.body.userId = token_decode.id;
+    const token_decode = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = token_decode.id;
     next();
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    logger.error({ err: error }, "[authUser]");
+    res.json({
+      success: false,
+      message: "Not authorised. Please log in again.",
+    });
   }
 };
 

@@ -4,31 +4,71 @@ import { AdminContext } from "../../context/AdminContext";
 import { toast } from "react-toastify";
 import axios from "axios";
 
+const SPECIALITIES = [
+  "General physician",
+  "Gynecologist",
+  "Dermatologist",
+  "Pediatricians",
+  "Neurologist",
+  "Gastroenterologist",
+];
+
+const EXPERIENCE_OPTIONS = Array.from({ length: 10 }, (_, i) =>
+  i === 0 ? "1 Year" : `${i + 1} Years`,
+);
+
+const Field = ({ label, children }) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-sm font-medium text-slate-700">{label}</label>
+    {children}
+  </div>
+);
+
+const SectionTitle = ({ children }) => (
+  <div className="flex items-center gap-3 mb-5">
+    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+      {children}
+    </span>
+    <div className="flex-1 h-px bg-slate-100" />
+  </div>
+);
+
 const Adddoctor = () => {
-  const [docImg, setDocImg] = useState(false);
+  const { backendUrl, aToken } = useContext(AdminContext);
+
+  const [docImg, setDocImg] = useState(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [experience, setExperience] = useState("1 Year");
   const [fees, setFees] = useState("");
   const [about, setAbout] = useState("");
-  const [speciality, setSpeciality] = useState("General physician");
+  const [speciality, setSpeciality] = useState(SPECIALITIES[0]);
   const [degree, setDegree] = useState("");
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const { backendUrl, aToken } = useContext(AdminContext);
+  const resetForm = () => {
+    setDocImg(null);
+    setName("");
+    setEmail("");
+    setPassword("");
+    setAddress1("");
+    setAddress2("");
+    setDegree("");
+    setAbout("");
+    setFees("");
+    setExperience("1 Year");
+    setSpeciality(SPECIALITIES[0]);
+  };
 
-  const onSubmitHandler = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    try {
-      if (!docImg) {
-        return toast.error("Image not selected");
-      }
+    if (!docImg) return toast.error("Please select a profile image.");
 
-      // Formdata is an object that simulates the data submitted in HTML form
-      // in order words, it is a box that stores items with its labels
-      // it is considered useful when sending a form to the server.
+    setLoading(true);
+    try {
       const formData = new FormData();
       formData.append("image", docImg);
       formData.append("name", name);
@@ -41,211 +81,244 @@ const Adddoctor = () => {
       formData.append("degree", degree);
       formData.append(
         "address",
-        JSON.stringify({ line1: address1, line2: address2 })
+        JSON.stringify({ line1: address1, line2: address2 }),
       );
-      // form data can't be console log directly that's why we are making use of the forEach array method
-      formData.forEach((value, key) => {
-        console.log(`${key}:${value}`);
-      });
+
       const { data } = await axios.post(
         backendUrl + "/api/admin/add-doctor",
         formData,
-        { headers: { aToken } }
+        {
+          headers: { aToken },
+        },
       );
+
       if (data.success) {
         toast.success(data.message);
-        setDocImg(false);
-        setName("");
-        setEmail("");
-        setPassword("");
-        setAddress1("");
-        setAddress2("");
-        setDegree("");
-        setAbout("");
-        setFees("");
-        setExperience("1 Year");
-        setSpeciality("General Physician");
+        resetForm();
       } else {
         toast.error(data.message);
       }
     } catch (error) {
       toast.error(error.message);
-      console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={onSubmitHandler} className="m-5 w-full">
-      <p className="mb-3 text-lg font-medium">Add Doctor</p>
+    <div className="max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-slate-800">Add Doctor</h1>
+        <p className="text-sm text-slate-500 mt-0.5">
+          Fill in the details below to register a new doctor.
+        </p>
+      </div>
 
-      <div className="bg-white p-8 border border-gray-100 rounded w-full max-w-4xl max-h-[80vh] overflow-y-scroll">
-        <div className="flex items-center gap-4 mb-8 text-gray-500">
-          <label htmlFor="doc-img">
-            <div className="w-16 h-16 bg-gray-100 rounded-full cursor-pointer bg-center bg-cover overflow-hidden">
-              <img
-                src={docImg ? URL.createObjectURL(docImg) : assets.upload_area}
-                alt=""
-              />
+      <form
+        onSubmit={onSubmit}
+        className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 space-y-8"
+      >
+        {/* Avatar upload */}
+        <div>
+          <SectionTitle>Profile Photo</SectionTitle>
+          <div className="flex items-center gap-5">
+            <label htmlFor="doc-img" className="cursor-pointer group">
+              <div className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-200 group-hover:border-teal-400 transition-colors overflow-hidden flex items-center justify-center bg-slate-50">
+                {docImg ? (
+                  <img
+                    src={URL.createObjectURL(docImg)}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <img
+                      src={assets.upload_area}
+                      alt="Upload"
+                      className="w-8 h-8 opacity-30"
+                    />
+                    <span className="text-xs text-slate-400">Upload</span>
+                  </div>
+                )}
+              </div>
+            </label>
+            <input
+              id="doc-img"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={(e) => setDocImg(e.target.files[0] || null)}
+            />
+            <div>
+              <p className="text-sm font-medium text-slate-700">
+                {docImg ? docImg.name : "No file selected"}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                JPEG, PNG or WebP &middot; Max 5 MB
+              </p>
+              {docImg && (
+                <button
+                  type="button"
+                  onClick={() => setDocImg(null)}
+                  className="text-xs text-red-400 hover:text-red-600 mt-1 transition-colors"
+                >
+                  Remove
+                </button>
+              )}
             </div>
-          </label>
-          <input
-            onChange={(e) => setDocImg(e.target.files[0])}
-            type="file"
-            id="doc-img"
-            hidden
-          />
-          <p>
-            Upload doctor's <br />
-            picture
-          </p>
+          </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-start text-gray-600 gap-10">
-          <div className="w-full lg:flex-1 flex flex-col gap-4">
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Doctor Name</p>
+        {/* Account details */}
+        <div>
+          <SectionTitle>Account Details</SectionTitle>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Field label="Full Name">
               <input
+                className="admin-input"
+                type="text"
+                placeholder="Dr. Jane Smith"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 outline-gray-500"
-                type="text"
-                placeholder="Name"
                 required
               />
-            </div>
-
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Doctor Email</p>
+            </Field>
+            <Field label="Email Address">
               <input
+                className="admin-input"
+                type="email"
+                placeholder="doctor@swiftcare.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                type="email"
-                placeholder="Email"
                 required
               />
-            </div>
-
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Doctor password</p>
+            </Field>
+            <Field label="Password">
               <input
+                className="admin-input"
+                type="password"
+                placeholder="Min. 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                type="password"
-                placeholder="password"
                 required
               />
-            </div>
-
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Experience</p>
-              <select
-                value={experience}
-                onChange={(e) => setExperience(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                name=""
-                id=""
-              >
-                <option value="1 year">1 Year</option>
-                <option value="2 years">2 Years</option>
-                <option value="3 years">3 Years</option>
-                <option value="4 years">4 Years</option>
-                <option value="5 years">5 Years</option>
-                <option value="6 years">6 Years</option>
-                <option value="7 years">7 Years</option>
-                <option value="8 years">8 Years</option>
-                <option value="9 years">9 Years</option>
-                <option value="10 years">10 Years</option>
-              </select>
-            </div>
-
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Fees</p>
-              <input
-                value={fees}
-                onChange={(e) => setFees(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                type="number"
-                placeholder="fees"
-                required
-              />
-            </div>
+            </Field>
           </div>
+        </div>
 
-          <div className="w-full lg:flex-1 flex flex-col gap-4">
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Speciality</p>
+        {/* Professional info */}
+        <div>
+          <SectionTitle>Professional Info</SectionTitle>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Field label="Speciality">
               <select
+                className="admin-input"
                 value={speciality}
                 onChange={(e) => setSpeciality(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                name=""
-                id=""
               >
-                <option value="General physician">General physician</option>
-                <option value="Gynecologist">Gynecologist</option>
-                <option value="Dermatologist">Dermatologist</option>
-                <option value="Pediatricians">Pediatricians</option>
-                <option value="Neurologist">Neurologist</option>
-                <option value="Gastroenterologist">Gastroenterologist</option>
+                {SPECIALITIES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
-            </div>
-
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Education</p>
+            </Field>
+            <Field label="Education / Degree">
               <input
+                className="admin-input"
+                type="text"
+                placeholder="e.g. MBBS, MD"
                 value={degree}
                 onChange={(e) => setDegree(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                type="text"
-                placeholder="Education"
                 required
               />
-            </div>
-
-            <div className="flex-1 flex flex-col gap-1">
-              <p>Address</p>
+            </Field>
+            <Field label="Experience">
+              <select
+                className="admin-input"
+                value={experience}
+                onChange={(e) => setExperience(e.target.value)}
+              >
+                {EXPERIENCE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Consultation Fee ($)">
               <input
-                value={address1}
-                onChange={(e) => setAddress1(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                type="text"
-                placeholder="address 1"
+                className="admin-input"
+                type="number"
+                min="0"
+                placeholder="e.g. 80"
+                value={fees}
+                onChange={(e) => setFees(e.target.value)}
                 required
               />
-              <input
-                value={address2}
-                onChange={(e) => setAddress2(e.target.value)}
-                className="border rounded px-3 py-2 border-gray-300 outline-gray-500"
-                type="text"
-                placeholder="address 2"
-                required
-              />
-            </div>
+            </Field>
           </div>
         </div>
 
+        {/* Address */}
         <div>
-          <p>About Doctor</p>
-          <textarea
-            value={about}
-            onChange={(e) => setAbout(e.target.value)}
-            className="w-full px-4 pt-2 border border-gray-300 rounded outline-gray-500"
-            placeholder="write about doctor"
-            rows={5}
-            required
-          />
+          <SectionTitle>Clinic Address</SectionTitle>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <Field label="Address Line 1">
+              <input
+                className="admin-input"
+                type="text"
+                placeholder="Street address"
+                value={address1}
+                onChange={(e) => setAddress1(e.target.value)}
+                required
+              />
+            </Field>
+            <Field label="Address Line 2 (optional)">
+              <input
+                className="admin-input"
+                type="text"
+                placeholder="Suite, floor, etc."
+                value={address2}
+                onChange={(e) => setAddress2(e.target.value)}
+              />
+            </Field>
+          </div>
         </div>
 
-        <button
-          type="submit"
-          className="bg-[#008080] px-10 py-3 mt-4 text-white rounded-full"
-        >
-          Add Doctor
-        </button>
-      </div>
-    </form>
+        {/* About */}
+        <div>
+          <SectionTitle>About</SectionTitle>
+          <Field label="Doctor Bio">
+            <textarea
+              className="admin-input resize-none"
+              rows={4}
+              placeholder="Brief background, specialisations, approach to patient care..."
+              value={about}
+              onChange={(e) => setAbout(e.target.value)}
+              required
+            />
+          </Field>
+        </div>
+
+        <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-8 py-2.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? "Adding..." : "Add Doctor"}
+          </button>
+          <button
+            type="button"
+            onClick={resetForm}
+            className="px-5 py-2.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors"
+          >
+            Reset
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
