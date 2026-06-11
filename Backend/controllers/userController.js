@@ -211,6 +211,65 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+// --- Resend Verification Email ---
+
+const resendVerification = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const user = await userModel
+      .findById(userId)
+      .select("name email isVerified emailVerifyExpiry");
+    if (!user) {
+      return res.json({ success: false, message: "User not found." });
+    }
+    if (user.isVerified) {
+      return res.json({
+        success: false,
+        message: "Your email is already verified.",
+      });
+    }
+    // Rate-limit: don't resend if a valid token was issued less than 2 minutes ago
+    if (
+      user.emailVerifyExpiry &&
+      user.emailVerifyExpiry > Date.now() + 22 * 60 * 60 * 1000
+    ) {
+      return res.json({
+        success: false,
+        message: "Please wait a moment before requesting another link.",
+      });
+    }
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    const expiry = Date.now() + 24 * 60 * 60 * 1000;
+
+    await userModel.findByIdAndUpdate(userId, {
+      emailVerifyToken: hashedToken,
+      emailVerifyExpiry: expiry,
+    });
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+    sendEmail(
+      user.email,
+      "Verify your SwiftCare email address",
+      emailVerificationEmail({ name: user.name, verifyUrl }),
+    );
+
+    res.json({
+      success: true,
+      message: "Verification email sent. Please check your inbox.",
+    });
+  } catch (error) {
+    logger.error({ err: error }, "[resendVerification]");
+    res.json({
+      success: false,
+      message: "Failed to resend. Please try again.",
+    });
+  }
+};
+
 // --- Reset Password ---
 
 const resetPassword = async (req, res) => {
@@ -659,6 +718,7 @@ export {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerification,
   getProfile,
   updateProfile,
   bookAppointment,
