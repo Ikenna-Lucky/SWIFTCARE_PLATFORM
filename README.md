@@ -4,13 +4,13 @@
 
 **Live Links**
 
-| App | URL |
-|-----|-----|
-| 🏥 Patient Portal | [swiftcare-platform.vercel.app](https://swiftcare-platform.vercel.app/) |
+| App                     | URL                                                                     |
+| ----------------------- | ----------------------------------------------------------------------- |
+| 🏥 Patient Portal       | [swiftcare-platform.vercel.app](https://swiftcare-platform.vercel.app/) |
 | 🩺 Doctor / Admin Panel | [swiftcare-admindoc.vercel.app](https://swiftcare-admindoc.vercel.app/) |
-| ⚙️ Backend API | [swiftcare-api.vercel.app](https://swiftcare-api.vercel.app/) |
+| ⚙️ Backend API          | [swiftcare-api.vercel.app](https://swiftcare-api.vercel.app/)           |
 
-![SwiftCare Home Page](./Frontend/src/assets/assets_frontend/Home-page.png)
+![SwiftCare Home Page](./Frontend/src/assets/assets_frontend/sign-up.png)
 
 ---
 
@@ -31,6 +31,7 @@
 ## Features
 
 ### Patient Portal
+
 - Browse and search doctors by speciality
 - View doctor profiles, experience, availability, and consultation fees
 - Book appointments with real-time slot selection
@@ -42,12 +43,14 @@
 - View full appointment history — upcoming and past
 
 ### Doctor Dashboard
+
 - Manage profile, availability toggle, consultation fees, and clinic address
 - View and manage all patient appointments
 - Mark appointments as completed or cancelled
 - Receive email alerts when appointments are cancelled
 
 ### Admin Dashboard
+
 - Add, edit, and manage doctor profiles (with Cloudinary image upload)
 - View all platform appointments and statistics
 - Cancel appointments on behalf of users
@@ -57,15 +60,15 @@
 
 ## Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| **Frontend** | React 18, Vite, Tailwind CSS, React Router v6, Axios, React Toastify |
-| **Backend** | Node.js, Express, MongoDB, Mongoose, JWT, Bcrypt |
-| **Payments** | Paystack (server-side redirect flow) |
-| **Email** | Nodemailer (Gmail App Password) |
-| **File Storage** | Cloudinary, Multer |
-| **Logging** | Pino |
-| **Deployment** | Vercel (frontend, admin, backend as serverless) |
+| Layer            | Technologies                                                         |
+| ---------------- | -------------------------------------------------------------------- |
+| **Frontend**     | React 18, Vite, Tailwind CSS, React Router v6, Axios, React Toastify |
+| **Backend**      | Node.js, Express, MongoDB, Mongoose, JWT, Bcrypt                     |
+| **Payments**     | Paystack (server-side redirect flow)                                 |
+| **Email**        | Nodemailer (Gmail App Password)                                      |
+| **File Storage** | Cloudinary, Multer                                                   |
+| **Logging**      | Pino                                                                 |
+| **Deployment**   | Vercel (frontend, admin, backend as serverless)                      |
 
 ---
 
@@ -120,12 +123,14 @@ SWIFTCARE_PLATFORM/
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Ikenna-Lucky/SWIFTCARE_PLATFORM.git
    cd SWIFTCARE_PLATFORM
    ```
 
 2. **Install dependencies for all three packages**
+
    ```bash
    cd Frontend && npm install
    cd ../admin && npm install
@@ -135,6 +140,7 @@ SWIFTCARE_PLATFORM/
 3. **Set up environment variables** (see [Environment Variables](#environment-variables) below)
 
 4. **Start all three development servers** (each in its own terminal)
+
    ```bash
    # Terminal 1 — Backend
    cd Backend && npm run server
@@ -175,6 +181,7 @@ FRONTEND_URL=          # e.g. http://localhost:5173 or your deployed URL
 ```
 
 For the Frontend and Admin, set `VITE_BACKEND_URL` in their respective `.env` files:
+
 ```env
 VITE_BACKEND_URL=http://localhost:4000
 ```
@@ -185,13 +192,13 @@ VITE_BACKEND_URL=http://localhost:4000
 
 Run these from inside each package directory (`Frontend/`, `Backend/`, `admin/`):
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build locally |
-| `npm run server` | Start backend with nodemon *(Backend only)* |
-| `npm run lint` | Lint the codebase |
+| Command           | Description                                 |
+| ----------------- | ------------------------------------------- |
+| `npm run dev`     | Start development server                    |
+| `npm run build`   | Build for production                        |
+| `npm run preview` | Preview production build locally            |
+| `npm run server`  | Start backend with nodemon _(Backend only)_ |
+| `npm run lint`    | Lint the codebase                           |
 
 ---
 
