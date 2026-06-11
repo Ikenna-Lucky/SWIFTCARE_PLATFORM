@@ -5,6 +5,7 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerification,
   getProfile,
   listAppointment,
   loginUser,
@@ -23,6 +24,7 @@ userRouter.post("/login", loginUser);
 userRouter.post("/forgot-password", forgotPassword);
 userRouter.post("/reset-password", resetPassword);
 userRouter.get("/verify-email", verifyEmail);
+userRouter.post("/resend-verification", authUser, resendVerification);
 userRouter.get("/get-profile", authUser, getProfile);
 userRouter.post(
   "/update-profile",
