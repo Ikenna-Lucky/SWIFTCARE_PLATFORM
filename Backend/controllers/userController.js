@@ -13,6 +13,7 @@ import {
   appointmentConfirmationEmail,
   appointmentCancellationEmail,
   passwordResetEmail,
+  emailVerificationEmail,
 } from "../utils/emailTemplates.js";
 
 // --- Helpers ---
@@ -57,8 +58,32 @@ const registerUser = async (req, res) => {
     }
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const newUser = new userModel({ name, email, password: hashedPassword });
+
+    // Generate email verification token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    const expiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+    const newUser = new userModel({
+      name,
+      email,
+      password: hashedPassword,
+      emailVerifyToken: hashedToken,
+      emailVerifyExpiry: expiry,
+    });
     const user = await newUser.save();
+
+    // Send verification email (non-blocking)
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${rawToken}`;
+    sendEmail(
+      user.email,
+      "Verify your SwiftCare email address",
+      emailVerificationEmail({ name: user.name, verifyUrl }),
+    );
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
     res.json({ success: true, token });
   } catch (error) {
@@ -142,6 +167,46 @@ const forgotPassword = async (req, res) => {
     res.json({
       success: false,
       message: "Failed to process request. Please try again.",
+    });
+  }
+};
+
+// --- Verify Email ---
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) {
+      return res.json({
+        success: false,
+        message: "Verification token is missing.",
+      });
+    }
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await userModel.findOne({
+      emailVerifyToken: hashedToken,
+      emailVerifyExpiry: { $gt: Date.now() },
+    });
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "Verification link is invalid or has expired.",
+      });
+    }
+    await userModel.findByIdAndUpdate(user._id, {
+      isVerified: true,
+      emailVerifyToken: undefined,
+      emailVerifyExpiry: undefined,
+    });
+    res.json({
+      success: true,
+      message: "Email verified successfully. You can now book appointments.",
+    });
+  } catch (error) {
+    logger.error({ err: error }, "[verifyEmail]");
+    res.json({
+      success: false,
+      message: "Verification failed. Please try again.",
     });
   }
 };
@@ -266,6 +331,14 @@ const bookAppointment = async (req, res) => {
       return res.json({
         success: false,
         message: "Doctor, date, and time slot are required.",
+      });
+    }
+    const userData = await userModel.findById(userId).select("isVerified");
+    if (!userData?.isVerified) {
+      return res.json({
+        success: false,
+        message:
+          "Please verify your email address before booking an appointment.",
       });
     }
     const docData = await doctorModel.findById(docId).select("-password");
@@ -583,6 +656,7 @@ export {
   loginUser,
   forgotPassword,
   resetPassword,
+  verifyEmail,
   getProfile,
   updateProfile,
   bookAppointment,

@@ -10,6 +10,10 @@ const userSchema = new mongoose.Schema(
     gender: { type: String, default: "Not Selected" },
     dob: { type: String, default: "Not Selected" },
     phone: { type: String, default: "0000000000" },
+    // Email verification
+    isVerified: { type: Boolean, default: false },
+    emailVerifyToken: { type: String, select: false },
+    emailVerifyExpiry: { type: Date, select: false },
     // Password reset — hashed token stored, raw token sent in email
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpiry: { type: Date, select: false },

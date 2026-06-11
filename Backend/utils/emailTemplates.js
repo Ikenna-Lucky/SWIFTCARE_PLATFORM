@@ -123,6 +123,31 @@ export const appointmentCancellationEmail = ({
     </p>
   `);
 
+export const emailVerificationEmail = ({ name, verifyUrl }) =>
+  base(`
+    <h2 style="margin:0 0 8px;color:#0f172a;font-size:20px;font-weight:700;">Verify Your Email Address</h2>
+    <p style="margin:0 0 24px;color:#64748b;font-size:14px;line-height:1.6;">
+      Hi ${name}, welcome to SwiftCare! Please confirm your email address to activate your account and start booking appointments.
+    </p>
+
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="background:#0f766e;border-radius:8px;">
+          <a href="${verifyUrl}" style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;">
+            Verify Email Address
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0 0 12px;color:#64748b;font-size:13px;line-height:1.6;">
+      This link expires in <strong>24 hours</strong>. If you did not create a SwiftCare account, you can safely ignore this email.
+    </p>
+    <p style="margin:0;color:#94a3b8;font-size:12px;word-break:break-all;">
+      Or copy this link: ${verifyUrl}
+    </p>
+  `);
+
 export const passwordResetEmail = ({ name, resetUrl }) =>
   base(`
     <h2 style="margin:0 0 8px;color:#0f172a;font-size:20px;font-weight:700;">Reset Your Password</h2>
