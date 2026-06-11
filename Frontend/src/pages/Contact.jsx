@@ -48,7 +48,9 @@ const Contact = () => {
         <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">
           Contact
         </p>
-        <h1 className="text-4xl font-bold text-gray-900">Get In Touch</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+          Get In Touch
+        </h1>
         <p className="text-gray-500 mt-3 max-w-md mx-auto">
           Have a question or need help? We're here for you.
         </p>

@@ -30,7 +30,7 @@ const RelatedDoctors = ({ speciality, docId }) => {
           Other {speciality} specialists you may consider
         </p>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {relatedDocs.map((doctor) => (
           <DoctorCard key={doctor._id} doctor={doctor} />
         ))}

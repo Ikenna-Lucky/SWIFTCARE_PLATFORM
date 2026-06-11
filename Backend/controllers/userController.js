@@ -333,8 +333,10 @@ const bookAppointment = async (req, res) => {
         message: "Doctor, date, and time slot are required.",
       });
     }
-    const userData = await userModel.findById(userId).select("isVerified");
-    if (!userData?.isVerified) {
+    const userVerifyCheck = await userModel
+      .findById(userId)
+      .select("isVerified");
+    if (!userVerifyCheck?.isVerified) {
       return res.json({
         success: false,
         message:

@@ -95,7 +95,7 @@ const About = () => {
         <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">
           About SwiftCare
         </p>
-        <h1 className="text-4xl font-bold text-gray-900">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
           Healthcare Made <span className="text-primary">Simple</span>
         </h1>
         <p className="text-gray-500 mt-3 max-w-lg mx-auto leading-relaxed">
@@ -184,11 +184,14 @@ const About = () => {
           <h2 className="section-title">Why Patients Choose Us</h2>
         </div>
 
-        <div ref={tilesRef} className="grid md:grid-cols-3 gap-6">
+        <div
+          ref={tilesRef}
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           {WHY_CHOOSE_US.map(({ iconPath, title, description }, index) => (
             <div
               key={title}
-              className={`card p-8 hover:border-primary/20 transition-all duration-300 group reveal ${tilesInView ? "is-visible" : ""}`}
+              className={`card p-6 lg:p-8 hover:border-primary/20 transition-all duration-300 group reveal ${tilesInView ? "is-visible" : ""}`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
               {/* Icon tile — fills with primary on hover */}

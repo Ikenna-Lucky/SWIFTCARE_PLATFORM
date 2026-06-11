@@ -65,7 +65,7 @@ const Navbar = () => {
               <NavLink key={path} to={path} end={path === "/"}>
                 {({ isActive }) => (
                   <li
-                    className={`px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-colors duration-200 ${
+                    className={`px-3 py-2 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition-colors duration-200 ${
                       isActive
                         ? "text-primary bg-primary-light"
                         : "text-gray-600 hover:text-primary hover:bg-gray-50"

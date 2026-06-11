@@ -21,7 +21,7 @@ const Banner = () => {
         {/* ── Text side — slides in from left ── */}
         <div
           ref={textRef}
-          className={`flex-1 px-8 md:px-14 py-12 md:py-16 z-10 reveal-left ${textInView ? "is-visible" : ""}`}
+          className={`flex-1 px-8 md:px-8 lg:px-14 py-12 md:py-14 lg:py-16 z-10 reveal-left ${textInView ? "is-visible" : ""}`}
         >
           <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-4">
             SwiftCare Platform
@@ -76,7 +76,7 @@ const Banner = () => {
         {/* ── Image side — slides in from right (desktop only) ── */}
         <div
           ref={imgRef}
-          className={`hidden md:block w-[320px] lg:w-[360px] flex-shrink-0 self-end reveal-right ${imgInView ? "is-visible" : ""}`}
+          className={`hidden md:block w-[240px] lg:w-[320px] xl:w-[360px] flex-shrink-0 self-end reveal-right ${imgInView ? "is-visible" : ""}`}
           style={{ transitionDelay: "120ms" }}
         >
           <img

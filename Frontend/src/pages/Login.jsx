@@ -113,7 +113,7 @@ const Login = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 page-enter">
       <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex">
         {/* ── Left panel ── */}
-        <div className="hidden md:flex flex-col justify-between w-[420px] shrink-0 bg-gradient-to-br from-primary via-teal-600 to-teal-500 px-8 py-10 relative overflow-hidden">
+        <div className="hidden md:flex flex-col justify-between w-[220px] lg:w-[420px] shrink-0 bg-gradient-to-br from-primary via-teal-600 to-teal-500 px-5 py-8 lg:px-8 lg:py-10 relative overflow-hidden">
           {/* Decorative circles */}
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/5 -translate-y-1/3 translate-x-1/3" />
           <div className="absolute bottom-20 left-0 w-48 h-48 rounded-full bg-white/5 translate-y-1/3 -translate-x-1/3" />
@@ -130,15 +130,15 @@ const Login = () => {
             </div>
 
             {/* Headline */}
-            <h2 className="text-white text-3xl font-bold leading-snug mb-2">
+            <h2 className="text-white text-xl lg:text-3xl font-bold leading-snug mb-1 lg:mb-2">
               Healthcare that works
             </h2>
-            <h2 className="text-teal-200 text-3xl font-bold leading-snug mb-8">
+            <h2 className="text-teal-200 text-xl lg:text-3xl font-bold leading-snug mb-5 lg:mb-8">
               around your life.
             </h2>
 
-            {/* Feature bullets */}
-            <ul className="space-y-4 mb-8">
+            {/* Feature bullets — tablet: hidden, desktop: visible */}
+            <ul className="hidden lg:block space-y-4 mb-8">
               {FEATURES.map((f, i) => (
                 <li key={i} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
@@ -161,8 +161,8 @@ const Login = () => {
               ))}
             </ul>
 
-            {/* Testimonial card */}
-            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6 relative z-10">
+            {/* Testimonial card — tablet: hidden, desktop: visible */}
+            <div className="hidden lg:block bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-4 mb-6 relative z-10">
               <div className="flex gap-0.5 mb-2">
                 {[...Array(5)].map((_, i) => (
                   <svg
@@ -215,7 +215,7 @@ const Login = () => {
         </div>
 
         {/* ── Right panel ── */}
-        <div className="flex-1 flex flex-col justify-center px-8 py-10 md:px-12">
+        <div className="flex-1 flex flex-col justify-center px-6 py-8 md:px-8 lg:px-12">
           {/* Tab switcher */}
           <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
             {["Sign In", "Create Account"].map((tab) => {

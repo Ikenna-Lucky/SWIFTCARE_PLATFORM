@@ -24,7 +24,7 @@ const Header = () => {
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full translate-y-1/3 -translate-x-1/4 pointer-events-none" />
 
-      <div className="relative w-full grid md:grid-cols-2 items-center gap-10 px-8 md:px-12 lg:px-16 py-12">
+      <div className="relative w-full grid md:grid-cols-2 items-center gap-8 md:gap-10 px-6 md:px-10 lg:px-16 py-10 md:py-12">
         {/* ── Left: Text content — staggered fade-up on load ── */}
         <div className="flex flex-col gap-6 z-10 max-md:text-center max-md:items-center">
           {/* Live availability badge */}
@@ -38,7 +38,7 @@ const Header = () => {
 
           {/* Headline */}
           <h1
-            className="hero-up text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.1]"
+            className="hero-up text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-[1.1]"
             style={{ animationDelay: "100ms" }}
           >
             Book a Doctor
